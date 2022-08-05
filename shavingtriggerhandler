@@ -1,0 +1,1432 @@
+*============================================================================================================
+*Class Name     : ShavingTriggerHandler
+*Description    : All the implementations related to Shaving object should be handled here
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 30th December, 2020
+*Version        : 2.0
+*Methods        : public void OnAfterInsert(Map<id,Shavings__c> newShavingMap, Map<id,Shavings__c> oldShavingMap)
+public void OnAfterUpdate(Map<id,Shavings__c> newShavingMap, Map<id,Shavings__c> oldShavingMap)
+public void CloneShavingRecord(Map<id,Shavings__c> newShavingMapVal, Map<id,Shavings__c> oldShavingMapVal)
+*============================================================================================================*/
+public class ShavingTriggerHandler   {
+
+
+
+    public void OnAfterInsert(Map<id,Shavings__c> newShavingMap, Map<id,Shavings__c> oldShavingMap){
+        Map<Id, Shavings__c> InsertingShavingMap = new Map<Id, Shavings__c>(); //Ticket No : 14606
+        
+        set<id> shavingsidset = new set<id>();
+        
+        for(Shavings__c shave : newShavingMap.values()){
+            if(Shave.Account_To__c != null && Shave.AccTo_Clone_ID__c == null){
+                InsertingShavingMap.put(Shave.id, Shave);
+            }
+            
+            if(Shave.Shipping_Address__c!= null)
+            {
+                shavingsidset.add(Shave.id);
+            }
+        }
+        if(InsertingShavingMap.size() > 0){
+            AccountToCreateShaving(InsertingShavingMap);
+        }
+        weekly_Shavings_Invoice(newShavingMap);
+        //createBillOfLadingRecord(newShavingMap); //Ticket No: 56417
+        
+        if(shavingsidset.size()>0)
+        {    
+            UpdateGeoCodes(shavingsidset);
+        }
+        
+    }    
+    public void OnAfterUpdate(Map<id,Shavings__c> newShavingMap, Map<id,Shavings__c> oldShavingMap) {
+        Map<id,Shavings__c> FilteredShavingMap = new Map<id,Shavings__c>(); // Ticket No : 13963
+        Map<id,Shavings__c> UpdatingShavingMap = new Map<id,Shavings__c>(); // Ticket No : 14606     
+        Map<Id, Shavings__c> DeleteInvMap = new Map<Id, Shavings__c>(); //56753 
+        Map<Id, Shavings__c> TripCompletedMap = new Map<Id, Shavings__c>(); //57064
+        Map<Id,Shavings__c> InvDateupdateMap = new Map<Id, Shavings__c>(); //59220
+         Map<Id,Shavings__c> yardageupdateMap = new Map<Id, Shavings__c>(); //61353  
+        Map<Id,Shavings__c> trip_SMS_Map = new Map<Id, Shavings__c>();
+        
+       set<id> shavingsidset = new set<id>();
+
+        
+        set<Id>AttchMapid = new set<Id>();
+         set<id> ShavingsID = new set<id>();
+         List<Shavings__c> newShaving = new List<Shavings__c>();
+                  List<Shavings__c> oldShaving = new List<Shavings__c>();
+                  
+                  for(Shavings__c shavingFor: newShavingMap.values()){
+                  newShaving.add(shavingFor);
+                  }
+                  for(Shavings__c shavingFor: oldShavingMap.values()){
+                  oldShaving.add(shavingFor);
+                  }
+
+         
+        
+      List<string> commentAccount1 = label.Account.split(',');
+      List<string> customAccount = label.Account_TWC.split(',');
+        for(Shavings__c Shave : newShavingMap.values()){
+            ShavingsID.add(Shave.id);
+            
+            if(shave.Trip_Completed__c != oldShavingMap.get(shave.id).Trip_Completed__c && Shave.Trip_Completed__c != null && Shave.Clone__c > 0 && Shave.Record_ID__c==null ){
+                FilteredShavingMap.put(shave.id,shave); 
+            }
+            if(Shave.Account_To__c != null && oldShavingMap.get(shave.id).Account_To__c != shave.Account_To__c && Shave.AccTo_Clone_ID__c == null){
+                UpdatingShavingMap.put(shave.id,shave);   
+            }
+            
+            if(Shave.Invoice_Number__c!= oldShavingMap.get(shave.id).Invoice_Number__c && Shave.Invoice_Number__c == 0 )
+            {
+                DeleteInvMap.put(Shave.id,Shave);
+            }
+            
+            if(shave.Visit_Date__c != oldShavingMap.get(shave.id).Visit_Date__c && Shave.Visit_Date__c != null)
+            {
+                InvDateupdateMap.put(shave.id,shave); 
+            }
+            
+            if((shave.Yardage__c!= oldShavingMap.get(shave.id).Yardage__c && Shave.Yardage__c!= null) || (shave.Yardage__c!= oldShavingMap.get(shave.id).Yardage__c && Shave.Yardage__c== null ) ) //61353
+            {
+                yardageupdateMap.put(shave.id,shave); 
+            }
+            
+           /* if(commentAccount1.contains(Shave.Account__r.name) && shave.Attachments.size() > 0)
+            {
+            AttchMapid .add(shave.id);
+            }*/
+           /* 
+            if(Shave.Trip_completed__c!= oldShavingMap.get(shave.id).Trip_completed__c && Shave.Trip_completed__c!= null ) //57064
+            {
+                TripCompletedMap.put(Shave.id,Shave);
+            }
+            */
+            
+            if(shave.Trip_Completed__c != oldShavingMap.get(shave.id).Trip_Completed__c && Shave.Trip_Completed__c != null  ) //71753
+            {
+                
+                Map<string,Account_Name__c> keys = new Map<string,Account_Name__c>();
+                for(Account_Name__c s :  Account_Name__c.getAll().values() )
+                {
+                    if(s.Checkvalue__c)
+                        keys.put(s.Value__c,s);
+                }
+                System.debug('Account_Name__c.getAll().values()'+Keys);
+                System.debug('shave.Account__c != s.Value__c'+shave.Account__c);
+               
+                if(!keys.containsKey(shave.Account__c))//84428
+                {
+                    trip_SMS_Map.put(shave.id,shave);
+                }
+            }
+            
+            if(Shave.Shipping_Address__c!= oldShavingMap.get(shave.id).Shipping_Address__c && Shave.Shipping_Address__c!= null ) 
+            {
+                shavingsidset.add(Shave.id);
+            }
+            
+        }
+        
+        
+        
+        list<string>ShavingsName = new list<string>(); //57064
+        for(Shaving_Invoice__c ShInv_for : [select id,name,Load_Type__c,Previous_Shavings_for_Weekly__c,Shavings__c from Shaving_Invoice__c where Previous_Shavings_for_Weekly__c !=null and Shavings__c =:ShavingsID ] )
+        {
+            system.debug('1st For <>><>>');
+        
+            if(ShInv_for.Previous_Shavings_for_Weekly__c!=null)
+            {
+                string[] names = ShInv_for.Previous_Shavings_for_Weekly__c.split(' - '); //58336
+                
+                for(string name : names) //58336
+                {
+                    ShavingsName.add(name);
+                }
+                
+            }
+            
+            //ShavingsName.add(ShInv_for.Previous_Shavings_for_Weekly__c);
+        }
+        
+            system.debug('ShavingsName >>> '+ShavingsName);
+        
+        for(Shavings__c Shave_for : [select id,name,Trip_Completed__c,Load_Type__c from Shavings__c where id=:ShavingsID ]) //57064
+        {
+            system.debug('Loadtype'+Shave_for.Load_Type__c );
+          
+            if((!ShavingsName.contains(Shave_for.name) && Shave_for.Trip_completed__c!= oldShavingMap.get(Shave_for.id).Trip_completed__c && Shave_for.Trip_completed__c!= null) || (Shave_for.Load_Type__c!= oldShavingMap.get(Shave_for.id).Load_Type__c && !Shave_for.Load_Type__c.contains('good')))
+             { 
+                system.debug('Inside update of Tripcompleted part ');
+                TripCompletedMap.put(Shave_for.id,Shave_for);
+             }
+        }
+        
+            
+        if(FilteredShavingMap.size()>0){      
+            CloneShavingRecord(FilteredShavingMap);
+        }
+        if(UpdatingShavingMap.size()> 0){
+            AccountToCreateShaving(UpdatingShavingMap);
+        } 
+        if(DeleteInvMap.size()>0)
+        {
+            DeleteInvoice(DeleteInvMap);
+        }
+        
+        if(TripCompletedMap.size()>0) //57064
+        {
+            weekly_Shavings_Invoice(TripCompletedMap);
+        }
+        
+        if(InvDateupdateMap.size()>0) //59220
+        {
+            InvoiceDateUpdate(InvDateupdateMap);
+        }   
+      /*  if(AttchMapid.size()>0)  
+        {
+        Attachment(At ,newShavingMap, oldShavingMap );
+        } */
+        
+        if(yardageupdateMap.size()>0) //61353
+        {
+            YardageChangesUpdateRentalPrice(yardageupdateMap);
+        }
+        
+        if(trip_SMS_Map.size()>0)
+        {
+            Update_trip_SMS(trip_SMS_Map);
+        }    
+        
+        if(shavingsidset.size()>0)
+        {    
+            UpdateGeoCodes(shavingsidset);
+        }
+        
+             
+    }
+    
+    
+    
+        public void onBeforeInsert(List<Shavings__c> newSavings){
+            
+            
+            driverupdate(newSavings);
+            //Driver Lookup changes Ticket - 55211    
+            //configureDriver(newSavings); //This method is used to updated the driver picklist field based on the driver lookup field values.
+            
+            List<id> accountids = new list<id> ();
+            for(Shavings__c shave : newSavings)
+            {
+                accountids.add(shave.Account__c);
+            }
+            Tripcomplete(newSavings,accountids);
+        }
+
+    
+    public void OnBeforeUpdate(Map<Id,Shavings__c> newMap,Map<Id,Shavings__c> oldMap){
+        //configureDriver(newMap.values());
+        // set<Id>AttchMapid = new set<Id>();
+         Attachment(newMap, oldMap );
+        driverupdate(newMap.Values());
+    }
+    
+    
+    Public Void Tripcomplete(List<Shavings__c> newSavings,List<id> accountids)  //ticket no:60402 and 60403
+    {
+        //system.debug(save.Account__r.name+commentAccount1.Contains(save.Account__r.name) + save.Account__r.name );
+        map<id,Account> AccountMapid = new map<id,Account>();
+        for(Account acc :[select id,name from Account where id  In : accountids]){
+            AccountMapid.put(acc.id,acc);
+        }
+        system.debug(AccountMapid);
+        List<string> commentAccount1 = label.Account.split(',');
+        List<String> NewAccount =label.New_Earth_Account.split(',');
+        system.debug(newSavings);
+        for(Shavings__c save : newSavings){
+            system.debug(save.Account__r.name+commentAccount1+save.Account__r.name );
+            
+            /*if((commentAccount1.contains(AccountMapid.get(save.Account__c).name) && save.Trip_Completed__c !=null) ||(NewAccount.contains(AccountMapid.get(save.Account__c).name) && save.Trip_Completed__c !=null && save.Comments__c != 'From HEB snacks'))
+            {
+                save.adderror('Please upload a Bill Of Lading');
+            } */
+        }
+    }  
+    /*==================Ticket No : 13527==================================
+*Method Name     : CloneShavingRecord
+*Description     : Whenever Trip Completed field was changed and Clone field is greater than zero create a clone record in Shaving.
+*Arguments       : Shaving newMap,OldMap
+====================================================*/
+    public void CloneShavingRecord(Map<id,Shavings__c> newShavingMapVal){
+        Map<ID, Shavings__c> ClonedMap = new Map<ID,Shavings__c>();
+        List<Shavings__c> SourceList = new List<Shavings__c>();
+        Datetime VisitDateTime;
+        Date VisitDate;
+        ID SourceID;
+        for(Shavings__c shave : newShavingMapval.values()){
+            Shavings__c shaving = new Shavings__c();
+            shaving.Account__c = Shave.Account__c;
+            Shaving.Comments__c = Shave.Comments__c;
+            Shaving.Driver__c = Shave.Driver__c;
+            Shaving.Phone__c = Shave.Phone__c;
+            Shaving.Shipping_Address__c = Shave.Shipping_Address__c;
+            Shaving.Trip_Type__c = Shave.Trip_Type__c;
+            Shaving.Invoice_Number__c= Shave.Invoice_Number__c;
+            system.debug('Shaving.Invoice_Number__c >> '+Shaving.Invoice_Number__c);
+            Shaving.Order_Value__c= Shave.Order_Value__c;
+            if(Shave.Trip_Type__c == 'Rental') //Ticket - 54699
+            {
+                Shaving.Rental_Frequency__c = Shave.Rental_Frequency__c;
+                Shaving.Rental_day_Start__c = Shave.Rental_day_Start__c;
+                Shaving.Rental_day_End__c = Shave.Rental_day_End__c;
+            }
+            Shaving.Clone__c = Shave.Clone__c;
+            Shaving.Load_Type__c = Shave.Load_Type__c; 
+            Shaving.Trip_Number__c = Shave.Trip_Number__c;
+            Shaving.For_or_In_Storage__c=Shave.For_or_In_Storage__c;                
+            VisitDateTime =DateTime.newInstance(Shave.Visit_Date__c, Time.newInstance(9, 0, 0, 0));
+            for(integer i = 0; i < Shave.Clone__c; i++){ //Ticket No : 14023
+                VisitDateTime = VisitDateTime.addDays(1);
+                if(VisitDateTime.format('E')=='Sat'){
+                    VisitDateTime=VisitDateTime.addDays(1);
+                }
+                if(VisitDateTime.format('E')=='Sun'){
+                    VisitDateTime=VisitDateTime.addDays(1);
+                }
+            }
+            VisitDate = Date.newInstance(VisitDateTime.year(),VisitDateTime.month(),VisitDateTime.day());
+            Shaving.Visit_Date__c = VisitDate;            
+            ClonedMap.put(shave.id, Shaving);
+            
+        }
+        System.debug('ClonedMap value is ---------->'+ClonedMap.values());
+        if(ClonedMap.size() > 0){
+            try{
+                insert ClonedMap.values();
+            }
+            catch(Exception e){
+                System.debug('Exception raised due to ---------->'+e);
+            }
+        }    
+        for(Shavings__c SourShave : [Select id, Name, Account__c, Clone__c, Invoice_Number__c,Order_Value__c,Record_Id__c, Comments__c, Driver__c, Load_Type__c, Phone__c, Shipping_Address__c, Trip_Completed__c, Trip_Number__c, Trip_Type__c, Visit_Date__c from Shavings__c where id =: ClonedMap.keySet()]){
+            if(ClonedMap.containsKey(SourShave.id)){
+                SourShave.Record_ID__c = ClonedMap.get(SourShave.id).id;
+                SourceList.add(SourShave);        
+            }
+        }
+        System.debug('SourceList value is'+SourceList);        
+        if(SourceList.size() > 0){
+            try{
+                Update SourceList;
+            }
+            catch(Exception e){
+                System.debug('Exception raised due to ---------->'+e);
+            }
+        }          
+    }
+    
+    
+    
+ /*----------------------------------------------------------------------------------------------------------*/
+   //Ticket n0:60402 and 60403 
+      Public static void Attachment(Map<id,Shavings__c> newShavingMap, Map<id,Shavings__c> oldShavingMap)   
+      {
+     
+      List<string> commentAccount1 = label.Account.split(',');
+      List<String> NewAccount =label.New_Earth_Account.split(',');
+    //Shavings__c Shave =  [select id,name,(Select id, Name, createddate,ContentType from Attachments order by createddate desc Limit 1),(Select Id, SystemModstamp, ContentDocumentId from ContentDocumentLinks order by SystemModstamp desc Limit 1),Trip_Completed__c,Account__r.name,Visit_Date__c from Shavings__c where id=:ShaveId];
+     List<Shavings__c> value = [select id,Name,Trip_Completed__c ,Comments__c,Account__r.name,(Select id, Name, createddate,ContentType from Attachments),(Select Id, SystemModstamp, ContentDocumentId from ContentDocumentLinks order by SystemModstamp desc Limit 1)from Shavings__c Where id = : newShavingMap.Keyset()];
+      
+    for(Shavings__c shavingFor: value )
+    {
+   // newshavingMap.get(shavingFor.id).adderror('Attachment2');
+    system.debug(commentAccount1+' '+ shavingFor.Account__r.name + commentAccount1.Contains(shavingFor.Account__r.name) );
+     if((oldShavingMap.get(shavingFor.Id).Trip_Completed__c  != newShavingMap.get(shavingFor.Id).Trip_Completed__c   &&    oldShavingMap.get(shavingFor.id).Trip_Completed__c ==null && newShavingMap.get(shavingFor.id).Trip_Completed__c!=null  && commentAccount1.Contains(shavingFor.Account__r.name.trim()))||(oldShavingMap.get(shavingFor.Id).Trip_Completed__c  != newShavingMap.get(shavingFor.Id).Trip_Completed__c   &&    oldShavingMap.get(shavingFor.id).Trip_Completed__c ==null && newShavingMap.get(shavingFor.id).Trip_Completed__c!=null  && NewAccount.Contains(shavingFor.Account__r.name.trim()) && shavingFor.Comments__c!='From HEB Snacks'))
+     {
+       
+     if(shavingFor.Attachments.size() > 0 || shavingFor.ContentDocumentLinks.size() > 0)
+      {
+            shavingFor.Trip_Completed__c=System.now();
+            
+                   
+                
+                }
+           else
+           {
+           newshavingMap.get(shavingFor.id).adderror('Please upload a Bill Of Lading');
+          //shavingFor.adderror('Attachment');
+           }
+            
+           }
+           
+         
+  // else
+    
+   // shavingFor.Trip_Completed__c=System.now();
+     //newshavingMap.get(shavingFor.id).adderror('Att1');
+   // shavingFor.adderror('Attachment1');
+    
+    }
+    }
+    
+    
+    /*==================Ticket No : 14606==================================
+*Method Name     : AccountToCreateShaving
+*Description     : When the Account To field to choose the Account, it will create the another shaving record with next trip number.
+*Arguments       : Shaving newMap.
+=======================================================================*/
+    public void AccountToCreateShaving(Map<ID, Shavings__c> newShavingMap){
+        Map<Id, Shavings__c> shavingMap = new Map<Id, Shavings__c>();
+        List<Shavings__c> SourceShaveList = new List<Shavings__c>();
+        
+        for(Shavings__c shave : [Select id, Account__r.Name,Invoice_Number__c,Order_Value__c, Account_To__c, Visit_Date__c, Load_Type__c, Driver__c, Trip_Number__c from Shavings__c where id =: newShavingMap.keyset()]){
+            if(Shave.Trip_Number__c != null){
+                Shavings__c shavingRec = new Shavings__c();
+                ShavingRec.Account__c = Shave.Account_To__c;
+                ShavingRec.Visit_Date__c = Shave.Visit_Date__c;
+                ShavingRec.Load_Type__c = Shave.Load_Type__c;
+                ShavingRec.Driver__c = Shave.Driver__c;
+                ShavingRec.Trip_Number__c = String.valueOf(Integer.valueOf(Shave.Trip_Number__c)+1);
+                ShavingRec.Trip_Type__c = 'Delivery';
+                ShavingRec.Invoice_Number__c= Shave.Invoice_Number__c;
+                system.debug('ShavingRec.Invoice_Number__c >> '+ShavingRec.Invoice_Number__c);
+                ShavingRec.Order_Value__c= Shave.Order_Value__c;
+                ShavingRec.Comments__c = 'From '+Shave.Account__r.Name;
+                if(String.valueOf(shave.Account_To__c).contains(Label.Haulbrooke)){   //17290   //&& shave.Load_Type__c.contains('Bad')  Commented for 19556
+                    //ShavingRec.For_Or_In_Storage__c = 'Yes';  // Ticket - 53881
+                    if (String.valueOf(shave.Account__c).contains(Label.AccountNamesInShaving)) 
+                    {
+                        ShavingRec.For_Or_In_Storage__c = ''; // Ticket - 53881
+                    }
+                    else{
+                        ShavingRec.For_Or_In_Storage__c = 'Yes'; // Ticket - 54488
+                    }
+                }
+                
+                ShavingMap.put(Shave.id,ShavingRec);
+            }
+        } 
+        if(ShavingMap.size() > 0){
+            try{
+                insert ShavingMap.values();
+            }
+            catch(DMLException e){
+                system.debug('Exception Raised due to ----------->'+e);
+                if(E.getMessage().Contains('INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST')){
+                    for(Shavings__c shave : newShavingMap.values()){
+                        Shave.addError(e.getMessage().substringAfter('INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST,')); 
+                    }   
+                }
+            }
+        }
+        for(Shavings__c SourShave : [Select id, Name, Account__c, Clone__c, Invoice_Number__c,Order_Value__c,Record_Id__c, Comments__c, Driver__c, Load_Type__c, Phone__c, Shipping_Address__c, Trip_Completed__c, Trip_Number__c, Trip_Type__c, Visit_Date__c from Shavings__c where id =: ShavingMap.keySet()]){
+            if(ShavingMap.containsKey(SourShave.id)){
+                SourShave.AccTo_Clone_ID__c  = ShavingMap.get(SourShave.id).id;
+                SourceShaveList.add(SourShave);
+            }
+        }
+        if(SourceShaveList.size() > 0){
+            try{
+                update SourceShaveList;
+            }catch(Exception E){
+                System.debug('Exception Raised due to --------------->'+E);
+            }
+        }
+    }
+    
+    public void weekly_Shavings_Invoice(Map<Id, Shavings__c> newMap)
+    {
+        list<string>ShavingsName = new list<string>();
+        Boolean NewShavingInv=true;
+        decimal peryard ; decimal yardage;
+        Set<Id> ShavingsId = new Set<Id>();
+        Set<Id> AccountsId = new Set<Id>();
+        Map<Id, Shavings__c> ShavingsMap = new Map<Id, Shavings__c>();
+        Map<Id,Shaving_Invoice__c> AccountShavingsInvoiceId = new Map<Id,Shaving_Invoice__c>();
+       // Map<Id,Shaving_Invoice__c> Shave_ShavingsInvoiceId = new Map<Id,Shaving_Invoice__c>();
+        List<Shaving_Invoice__c> Shavings_InvoiceUpsert = new List<Shaving_Invoice__c>();
+        Map<string,list<Shaving_Invoice__c>> CustomAccountInvoiceMap=new Map<string,list<Shaving_Invoice__c>>();
+        Map<id,list<Shaving_Invoice__c>> AccountInvoiceMap_visit=new Map<id,list<Shaving_Invoice__c>>();
+        
+        List<string> CustomAccountids=Label.Account_HEB_Snacks.split(',');
+        system.debug(''+CustomAccountids);
+        
+        list<string> OthervalueAccount = label.Account_name_for_Bad_Other_value.split(',');
+        system.debug('<< OthervalueAccount  >>'+OthervalueAccount ); 
+        
+        list<string> commentAccount = label.Account_Nordstrom.split(',');
+        system.debug('<< commentAccount >>'+commentAccount ); 
+        
+        
+        string weekofVisitdate;
+      
+        for(Shavings__c ShavingsIdFor : newMap.values())
+        {
+            ShavingsId.add(ShavingsIdFor.Id);
+            system.debug('ShavingsId' +ShavingsId);
+            system.debug('weekofVisitdate '+weekofVisitdate );
+            
+        }
+        
+        for(Shavings__c ShavingsFor : [SELECT Id, Name, Account__r.name,Account__r.Other__c,Account__c,Yard_size__c,Trip_Completed__c,Invoice_Number__c,Visit_Date__c,Account__r.Comments__c,Account__r.Per_Yard__c,Yardage__c, Account__r.Shavings_Invoices__c,Trip_Type__c , Account__r.Weekly_Invoice__c, Account__r.X120_Yards__c, Account__r.X20_Yards__c, Account__r.X30_Yards__c, Account__r.X60_Yards__c,  Account__r.Email_1__c, Account__r.Email_2__c, Account__r.Email_3__c, Account__r.Email_4__c, Account__r.Sales_Tax__c, Driver__c, Load_Type__c, Weekly_Invoice__c FROM Shavings__c where Id =: ShavingsId ])
+        {
+            if((ShavingsFor.Invoice_Number__c!=0  && ShavingsFor.Account__r.Weekly_Invoice__c == 'Yes' && (ShavingsFor.Account__r.Shavings_Invoices__c != 'No' && (ShavingsFor.Account__r.Shavings_Invoices__c == 'Bad Only' && ShavingsFor.Load_Type__c.contains('Bad')))) ||(ShavingsFor.Invoice_Number__c!=0  && ShavingsFor.Account__r.Weekly_Invoice__c == 'Yes' && ShavingsFor.Account__r.Shavings_Invoices__c == null ))
+            {
+                ShavingsMap.put(ShavingsFor.Id, ShavingsFor);
+                AccountsId.add(ShavingsFor.Account__c);
+            }
+        }
+        
+        for(Shaving_Invoice__c Shavings_InvoiceFor : [Select id, Name,Previous_Shavings_for_Weekly__c,Invoice_Comments__c,Per_Yard__c,Account__r.Other__c ,Shavings__r.Yard_size__c,Shavings__r.Trip_Completed__c,Shavings__r.Load_Type__c,Shavings__r.Visit_Date__c,Account__r.name,Account__r.Comments__c,Yardage__c, Shavings__c,Shavings__r.Trip_Type__c,Shavings__r.Yardage__c, Account__c,Account__r.Per_Yard__c , Rental_Price__c, Weekly_Comments__c from Shaving_Invoice__c where Account__c =: AccountsId and Shavings__r.Trip_Type__c !='Rental' and Shavings__r.Weekly_Invoice__c != 'No' and Invoice_Status__c != 'Approved'])
+        {     
+            system.debug('Shavings_InvoiceFor ID>>' +Shavings_InvoiceFor.shavings__r.id);
+            AccountShavingsInvoiceId.put(Shavings_InvoiceFor.Account__c, Shavings_InvoiceFor);
+           
+            if(!AccountInvoiceMap_visit.containskey(Shavings_InvoiceFor.Account__c))
+            AccountInvoiceMap_visit.put(Shavings_InvoiceFor.Account__c,new List<Shaving_Invoice__c>());
+            AccountInvoiceMap_visit.get(Shavings_InvoiceFor.Account__c).add(Shavings_InvoiceFor);
+            system.debug('AccountInvoiceMap_visit >> '+AccountInvoiceMap_visit);
+                    
+            System.debug(Shavings_InvoiceFor.Account__c+' '+CustomAccountids);
+
+            if(CustomAccountids.contains(Shavings_InvoiceFor.Account__r.name))
+            {
+            if(!CustomAccountInvoiceMap.containskey(Shavings_InvoiceFor.Account__r.name))
+            CustomAccountInvoiceMap.put(Shavings_InvoiceFor.Account__r.name,new List<Shaving_Invoice__c>());
+            CustomAccountInvoiceMap.get(Shavings_InvoiceFor.Account__r.name).add(Shavings_InvoiceFor);
+            }
+           
+        }
+        
+        System.debug(''+CustomAccountInvoiceMap);
+        for(Shavings__c ShavingsFor : ShavingsMap.values())
+        {
+            if(AccountShavingsInvoiceId.containskey(ShavingsFor.Account__c) && ShavingsFor.Trip_Type__c !='Rental'  )
+            {
+                  //if(AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Account__r.name !='HEB Snacks')
+                System.debug(CustomAccountids+' '+String.valueOf(AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Account__c).substring(0,15));
+                if(!CustomAccountids.contains(AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Account__r.name))
+                { 
+                
+                    system.debug('Not snacks>>>');
+                    
+                for(Shaving_Invoice__c ShaInv  :  AccountInvoiceMap_visit.get(ShavingsFor.Account__c))
+                {
+                if(ShaInv.Previous_Shavings_for_Weekly__c!=null)
+                {
+                    string[] names = ShaInv.Previous_Shavings_for_Weekly__c.split(' - '); //58336
+                    
+                    for(string name : names) //58336
+                    {
+                        ShavingsName.add(name);
+                    }
+                    
+                }
+                if(DateTime.newInstanceGmt(Date.valueOf(ShavingsFor.visit_date__c).toStartOfWeek(),Time.NewInstance(0,0,0,0)).format('w') == DateTime.newInstanceGmt(Date.valueOf(ShaInv.Shavings__r.visit_date__c).toStartOfWeek(),Time.NewInstance(0,0,0,0)).format('w'))
+                {
+                system.debug(DateTime.newInstanceGmt(Date.valueOf(ShavingsFor.visit_date__c).toStartOfWeek(),Time.NewInstance(0,0,0,0)).format('w')+'---'+DateTime.newInstanceGmt(Date.valueOf(ShaInv.Shavings__r.visit_date__c).toStartOfWeek(),Time.NewInstance(0,0,0,0)).format('w'));
+                if(!ShavingsName.contains(ShavingsFor.name)){
+                    //-----
+                if(ShavingsFor.Trip_Completed__c!=null ) //57064
+                {
+                    ShaInv.Shavings__c = ShavingsFor.Id;
+                    
+                    if(ShaInv.Rental_Price__c != null)
+                    {
+                        if( OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad')) //58887
+                        {
+                            ShaInv.Rental_Price__c += ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                            system.debug('Sh_Inv .Rental_Price__c if-part>>>>> '+ShaInv.Rental_Price__c );
+                        }
+                        else
+                        {
+                            if(ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c!= null)   //56610
+                            {
+                                ShaInv.Rental_Price__c += ShavingsFor.Account__r.Per_Yard__c * ShavingsFor.Yardage__c;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>1>> '+ShaInv.Rental_Price__c );
+                            }
+                            else if (ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c == null)
+                            {
+                                yardage = integer.valueof(ShavingsFor.Yard_size__c);
+                                
+                                ShaInv.Rental_Price__c += ShavingsFor.Account__r.Per_Yard__c * yardage;
+                                
+                                system.debug('Sh_Inv .Rental_Price__c >>>2>> '+ShaInv.Rental_Price__c );
+                                
+                            }
+                            
+                            else
+                            {
+                                system.debug('<<<<<<<3>>>>>>>>>');
+                                ShaInv.Rental_Price__c  += ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>3>> '+ShaInv.Rental_Price__c );
+                                
+                            }
+                        }
+                        ShaInv.Per_Yard__c = ShavingsFor.Account__r.Per_Yard__c ;
+                        ShaInv.Yardage__c= ShavingsFor.Yardage__c;
+                    
+                    }
+                    else
+                    {    
+                        
+                        if(OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad')) //58887
+                        {
+                            ShaInv.Rental_Price__c = ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                            system.debug('Sh_Inv .Rental_Price__c if-part>>>2>> '+ShaInv.Rental_Price__c );
+                        }
+                        else
+                        {
+                            ShaInv.Rental_Price__c = ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                            system.debug('Sh_Inv .Rental_Price__c else-part>>>2>> '+ShaInv.Rental_Price__c );
+                        }
+                           
+                    }
+                    
+                    if(ShaInv.Weekly_Comments__c != null)
+                    {
+                        ShaInv.Weekly_Comments__c += ' - ' + ShavingsFor.Name;
+                        system.debug('AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Weekly_Comments__c >> 1 '+ShaInv.Weekly_Comments__c);
+                    }
+                    else
+                    {
+                        ShaInv.Weekly_Comments__c = ShavingsFor.Name;
+                        system.debug('AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Weekly_Comments__c >> 2'+ShaInv.Weekly_Comments__c);
+                    }
+                   if(CustomAccountids.contains(ShavingsFor.Account__r.name))
+                    {
+                    ShaInv.Invoice_Comments__c =ShavingsFor.Load_Type__c.contains('120') ? '120yd'+' load of shavings.':ShavingsFor.Load_Type__c.contains('30') ? 'Wet & Dry Chip Haul From HEB Snacks - 30yd loads.': ShavingsFor.Load_Type__c.contains('20yd') ? 'Dry Chip Haul From HEB Snacks - 20yd loads.': ShavingsFor.Load_Type__c.contains('60') ? '60yd'+' load of shavings.' : ShaInv.Invoice_Comments__c  ;
+                    If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            ShaInv.Invoice_Comments__c = ShaInv.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                   }
+                    
+                    else if(commentAccount.contains(ShavingsFor.Account__r.name))//59220
+                    {
+                        ShaInv.Invoice_Comments__c = ShaInv.Account__r.Comments__c;
+                    }
+                    
+                   else
+                    {
+                        ShaInv.Invoice_Comments__c = ShavingsFor.Yardage__c!=null?string.valueof(Integer.valueOf(ShavingsFor.Yardage__c))+'yd':ShavingsFor.Load_Type__c.contains('120') ? '120yd' : ShavingsFor.Load_Type__c.contains('60') ? '60yd' : ShavingsFor.Load_Type__c.contains('30') ? '30yd' : ShavingsFor.Load_Type__c.contains('20') ? '20yd' : ShaInv.Invoice_Comments__c  ;
+                        ShaInv.Invoice_Comments__c = ShaInv.Invoice_Comments__c + ' load of shavings. ';
+                        If(ShaInv.Account__r.Comments__c != null) //56414
+                        {
+                            ShaInv.Invoice_Comments__c = ShaInv.Invoice_Comments__c + ShaInv.Account__r.Comments__c;
+                        }
+                    }
+                    
+                    ShaInv.Invoice_Date__c = ShavingsFor.Visit_Date__c ;
+                    ShaInv.Date_Due__c= ShavingsFor.Visit_Date__c +30;
+                    
+                    Shavings_InvoiceUpsert.add(ShaInv);
+                    
+                    NewShavingInv=false;
+                    break;
+                    
+                    
+                    
+                    
+                    //----
+                    
+                }}
+                NewShavingInv=false; //57064
+                break;   
+                } }  /////-------  
+                 if(NewShavingInv)
+                 {
+                    
+                    Shaving_Invoice__c Shaving_Invoice = new Shaving_Invoice__c();
+                    Shaving_Invoice.Shavings__c = ShavingsFor.Id;
+                    Shaving_Invoice.Account__c = ShavingsFor.Account__c;
+                    Shaving_Invoice.Customer_Email__c = ShavingsFor.Account__r.Email_1__c;
+                    Shaving_Invoice.Additional_Email__c = ShavingsFor.Account__r.Email_2__c;
+                    Shaving_Invoice.Sales_Tax__c = ShavingsFor.Account__r.Sales_Tax__c;
+                    Shaving_Invoice.Invoice_Date__c = ShavingsFor.Visit_Date__c; //56610
+                    Shaving_Invoice.Date_Due__c = Shaving_Invoice.Invoice_Date__c+30; //56610
+                    Shaving_Invoice.Sales_Tax__c = ShavingsFor.Account__r.Sales_Tax__c;
+                    //check the Yardage in the Shaving record
+                    if(CustomAccountids.contains(ShavingsFor.Account__r.name))
+                    {
+                     Shaving_Invoice.Invoice_Comments__c =ShavingsFor.Load_Type__c.contains('120') ? '120yd'+' load of shavings.': ShavingsFor.Load_Type__c.contains('30')?'Wet & Dry Chip Haul From HEB Snacks - 30yd loads.':ShavingsFor.Load_Type__c.contains('20yd')?'Dry Chip Haul From HEB Snacks - 20yd loads.' : ShavingsFor.Load_Type__c.contains('60') ? '60yd'+' load of shavings.' : Shaving_Invoice.Invoice_Comments__c;
+                    If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                   }
+                    else if(commentAccount.contains(ShavingsFor.Account__r.name))//59220
+                    {
+                        Shaving_Invoice.Invoice_Comments__c = ShavingsFor.Account__r.Comments__c;
+                    }
+                    else
+                    {
+                    
+                        Shaving_Invoice.Invoice_Comments__c = ShavingsFor.Yardage__c!=null?string.valueof(Integer.valueOf(ShavingsFor.Yardage__c))+'yd':ShavingsFor.Load_Type__c.contains('120') ? '120yd' : ShavingsFor.Load_Type__c.contains('60') ? '60yd' : ShavingsFor.Load_Type__c.contains('30') ? '30yd' : ShavingsFor.Load_Type__c.contains('20') ? '20yd' : Shaving_Invoice.Invoice_Comments__c  ;
+                        Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c + ' load of shavings. ';
+                        
+                        If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                    
+                    }    
+                        
+                        if(OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad')) //58887
+                        {
+                            Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                            system.debug('<<<<<<Shaving_Invoice.Rental_Price__c-ifpart>>>>>>>'+Shaving_Invoice.Rental_Price__c);
+                        }
+                        else
+                        {
+                            if(ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c!= null)
+                            {
+                                Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Per_Yard__c * ShavingsFor.Yardage__c;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>1>> '+Shaving_Invoice.Rental_Price__c );
+                            }
+                            else if (ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c == null)
+                            {
+                                yardage = integer.valueof(ShavingsFor.Yard_size__c);
+                               
+                                Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Per_Yard__c * yardage ;
+                                
+                                system.debug('Sh_Inv .Rental_Price__c >>>2>> '+Shaving_Invoice.Rental_Price__c );
+                                
+                            }
+                            
+                            else
+                            {
+                                system.debug('<<<<<<<3>>>>>>>>>');
+                                //Shaving_Invoice.Rental_Price__c =  ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : 0 :0;
+                                Shaving_Invoice.Rental_Price__c =  ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>3>> '+Shaving_Invoice.Rental_Price__c );
+                                
+                            }
+                            system.debug('<<<<<<Shaving_Invoice.Rental_Price__c-else>>>>>>>'+Shaving_Invoice.Rental_Price__c);
+                        }
+                        
+                        Shaving_Invoice.Per_Yard__c = ShavingsFor.Account__r.Per_Yard__c ;
+                        Shaving_Invoice.Yardage__c= ShavingsFor.Yardage__c;
+                  
+                    Shaving_Invoice.Weekly_Comments__c = ShavingsFor.Name;
+                    system.debug('Shaving_Invoice.Weekly_Comments__c'+Shaving_Invoice.Weekly_Comments__c);
+                    Shavings_InvoiceUpsert.add(Shaving_Invoice);
+                }
+                    
+                  /////-------  
+                } 
+                
+                //else if(AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Account__r.name == 'HEB Snacks')
+                else if(CustomAccountids.contains(AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Account__r.name))
+                {    
+                system.debug('Snacks>>>'+AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Shavings__r.Load_Type__c.substring(0,4)+' == '+ShavingsFor.Load_Type__c.substring(0,4));
+                    
+                for(Shaving_Invoice__c ShaInv  :  CustomAccountInvoiceMap.get(ShavingsFor.Account__r.name))
+                {
+                if(ShaInv.Previous_Shavings_for_Weekly__c!=null)
+                {
+                    string[] names = ShaInv.Previous_Shavings_for_Weekly__c.split(' - '); //58336
+                    
+                    for(string name : names) //58336
+                    {
+                        ShavingsName.add(name);
+                    }
+                    
+                }
+                if(ShavingsFor.Load_Type__c.substring(0,3)== ShaInv.Shavings__r.Load_Type__c.substring(0,3) && DateTime.newInstanceGmt(Date.valueOf(ShavingsFor.visit_date__c).toStartOfWeek(),Time.NewInstance(0,0,0,0)).format('w') == DateTime.newInstanceGmt(Date.valueOf(ShaInv.Shavings__r.visit_date__c).toStartOfWeek(),Time.NewInstance(0,0,0,0)).format('w'))
+                {
+                    System.debug(ShavingsFor.Load_Type__c.substring(0,4)+' '+ShaInv.Shavings__r.Load_Type__c.substring(0,4));
+                    System.debug(AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Shavings__c+' '+ShaInv.Shavings__c);
+                    if(!ShavingsName.contains(ShavingsFor.name)){
+                    if(ShavingsFor.Trip_Completed__c!=null ) //57064
+                    {
+                    
+                    ShaInv.Shavings__c = ShavingsFor.Id;
+                    
+                    
+                    
+                    if(ShaInv.Rental_Price__c != null)
+                    {
+                        if(OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad')) //58887
+                        {
+                            ShaInv.Rental_Price__c += ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                            system.debug('Sh_Inv .Rental_Price__c if-part>>>>> '+ShaInv.Rental_Price__c );
+                        }
+                        else
+                        {
+                            if(ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c!= null)   //56610
+                            {
+                                ShaInv.Rental_Price__c += ShavingsFor.Account__r.Per_Yard__c * ShavingsFor.Yardage__c;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>1>> '+ShaInv.Rental_Price__c );
+                            }
+                            else if (ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c == null)
+                            {
+                                yardage = integer.valueof(ShavingsFor.Yard_size__c);
+                              
+                                ShaInv.Rental_Price__c +=  ShavingsFor.Account__r.Per_Yard__c * yardage;
+                                
+                                system.debug('Sh_Inv .Rental_Price__c >>>2>> '+ShaInv.Rental_Price__c );
+                                
+                            }
+                            
+                            else
+                            {
+                                system.debug('<<<<<<<3>>>>>>>>>');
+                                //ShaInv.Rental_Price__c  += ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : 0 :0;
+                                ShaInv.Rental_Price__c  += ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>3>> '+ShaInv.Rental_Price__c );
+                                
+                            }
+                                 system.debug('Sh_Inv .Rental_Price__c else-part>>>>> '+ShaInv.Rental_Price__c );
+                        }
+                        ShaInv.Per_Yard__c = ShavingsFor.Account__r.Per_Yard__c ;
+                        ShaInv.Yardage__c= ShavingsFor.Yardage__c;
+                    
+                    }
+                    else
+                    {    
+                        if(OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad')) //58887
+                        {
+                            ShaInv.Rental_Price__c = ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                            system.debug('Sh_Inv .Rental_Price__c if-part>>>2>> '+ShaInv.Rental_Price__c );
+                        }
+                        else
+                        {
+                            ShaInv.Rental_Price__c = ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                            system.debug('Sh_Inv .Rental_Price__c else-part>>>2>> '+ShaInv.Rental_Price__c );
+                        }
+                    }
+                    
+                    if(ShaInv.Weekly_Comments__c != null)
+                    {
+                        ShaInv.Weekly_Comments__c += ' - ' + ShavingsFor.Name;
+                        system.debug('AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Weekly_Comments__c >> 1 '+ShaInv.Weekly_Comments__c);
+                    }
+                    else
+                    {
+                        ShaInv.Weekly_Comments__c = ShavingsFor.Name;
+                        system.debug('AccountShavingsInvoiceId.get(ShavingsFor.Account__c).Weekly_Comments__c >> 2'+ShaInv.Weekly_Comments__c);
+                    }
+                    if(CustomAccountids.contains(ShavingsFor.Account__r.name))
+                    {
+                    ShaInv.Invoice_Comments__c = ShavingsFor.Load_Type__c.contains('120') ? '120yd' +' load of shavings.' : ShavingsFor.Load_Type__c.contains('30') ? 'Wet & Dry Chip Haul From HEB Snacks - 30yd loads.' : ShavingsFor.Load_Type__c.contains('20yd') ? 'Dry Chip Haul From HEB Snacks - 20yd loads.' : ShavingsFor.Load_Type__c.contains('60') ? '60yd'+' load of shavings.' : ShaInv.Invoice_Comments__c;
+                   If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            ShaInv.Invoice_Comments__c = ShaInv.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                   }
+                    
+                   else if(commentAccount.contains(ShavingsFor.Account__r.name))//59220
+                    {
+                        ShaInv.Invoice_Comments__c = ShaInv.Account__r.Comments__c;
+                    }
+                    else
+                    {
+                    
+                        ShaInv.Invoice_Comments__c = ShavingsFor.Yardage__c!=null?string.valueof(Integer.valueOf(ShavingsFor.Yardage__c))+'yd':ShavingsFor.Load_Type__c.contains('120') ? '120yd' : ShavingsFor.Load_Type__c.contains('60') ? '60yd' : ShavingsFor.Load_Type__c.contains('30') ? '30yd' : ShavingsFor.Load_Type__c.contains('20') ? '20yd' : ShaInv.Invoice_Comments__c  ;
+                        ShaInv.Invoice_Comments__c = ShaInv.Invoice_Comments__c + ' load of shavings. ';
+                        If(ShaInv.Account__r.Comments__c != null) //56414
+                        {
+                            ShaInv.Invoice_Comments__c = ShaInv.Invoice_Comments__c + ShaInv.Account__r.Comments__c;
+                        }
+                    }
+                    
+                    ShaInv.Invoice_Date__c = ShavingsFor.Visit_Date__c ;
+                    ShaInv.Date_Due__c= ShavingsFor.Visit_Date__c +30;
+                    
+                    
+                    Shavings_InvoiceUpsert.add(ShaInv);
+                    NewShavingInv=false;
+                    break;
+                    
+                    }}
+                    NewShavingInv=false;
+                    break;
+                }
+                }
+                 if(NewShavingInv)
+                 {
+                    
+                    Shaving_Invoice__c Shaving_Invoice = new Shaving_Invoice__c();
+                    Shaving_Invoice.Shavings__c = ShavingsFor.Id;
+                    Shaving_Invoice.Account__c = ShavingsFor.Account__c;
+                    Shaving_Invoice.Customer_Email__c = ShavingsFor.Account__r.Email_1__c;
+                    Shaving_Invoice.Additional_Email__c = ShavingsFor.Account__r.Email_2__c;
+                    Shaving_Invoice.Sales_Tax__c = ShavingsFor.Account__r.Sales_Tax__c;
+                    Shaving_Invoice.Invoice_Date__c = ShavingsFor.Visit_Date__c; //56610
+                    Shaving_Invoice.Date_Due__c = Shaving_Invoice.Invoice_Date__c+30; //56610
+                    Shaving_Invoice.Sales_Tax__c = ShavingsFor.Account__r.Sales_Tax__c;
+                    //check the Yardage in the Shaving record
+                    
+                     if(CustomAccountids.contains(ShavingsFor.Account__r.name))
+                    {
+                    Shaving_Invoice.Invoice_Comments__c =ShavingsFor.Load_Type__c.contains('120') ? '120yd'+ ' load of shavings.' : ShavingsFor.Load_Type__c.contains('30') ? 'Wet & Dry Chip Haul From HEB Snacks - 30yd loads.' : ShavingsFor.Load_Type__c.contains('20yd') ? 'Dry Chip Haul From HEB Snacks - 20yd loads.' : ShavingsFor.Load_Type__c.contains('60') ? '60yd'+' load of shavings.' : Shaving_Invoice.Invoice_Comments__c;
+                   If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                   }
+                 else if(commentAccount.contains(ShavingsFor.Account__r.name))//59220
+                    {
+                        Shaving_Invoice.Invoice_Comments__c = ShavingsFor.Account__r.Comments__c;
+                    }
+                    else
+                    {
+                        Shaving_Invoice.Invoice_Comments__c = ShavingsFor.Yardage__c!=null?string.valueof(Integer.valueOf(ShavingsFor.Yardage__c))+'yd':ShavingsFor.Load_Type__c.contains('120') ? '120yd' : ShavingsFor.Load_Type__c.contains('60') ? '60yd' : ShavingsFor.Load_Type__c.contains('30') ? '30yd' : ShavingsFor.Load_Type__c.contains('20') ? '20yd' : Shaving_Invoice.Invoice_Comments__c  ;
+                        Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c + ' load of shavings. ';
+                        
+                        If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                        
+                    }
+                    
+                        if( OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad')) //58887
+                        {
+                            Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                            system.debug('<<<<<<Shaving_Invoice.Rental_Price__c-ifpart>>>>>>>'+Shaving_Invoice.Rental_Price__c);
+                        }
+                        else
+                        {
+                            if(ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c!= null)
+                            {
+                                Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Per_Yard__c * ShavingsFor.Yardage__c;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>1>> '+Shaving_Invoice.Rental_Price__c );
+                            }
+                            else if (ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c == null)
+                            {
+                                yardage = integer.valueof(ShavingsFor.Yard_size__c);
+                               
+                                Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Per_Yard__c * yardage ;
+                                
+                                system.debug('Sh_Inv .Rental_Price__c >>>2>> '+Shaving_Invoice.Rental_Price__c );
+                                
+                            }
+                            
+                            else
+                            {
+                                system.debug('<<<<<<<3>>>>>>>>>');
+                                //Shaving_Invoice.Rental_Price__c =  ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : 0 :0;
+                                Shaving_Invoice.Rental_Price__c =  ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                                system.debug('Shaving_Invoice.Rental_Price__c >>>3>> '+Shaving_Invoice.Rental_Price__c );
+                                
+                            }
+                            system.debug('<<<<<<Shaving_Invoice.Rental_Price__c-else>>>>>>>'+Shaving_Invoice.Rental_Price__c);
+                        }
+                        Shaving_Invoice.Per_Yard__c = ShavingsFor.Account__r.Per_Yard__c ;
+                        Shaving_Invoice.Yardage__c= ShavingsFor.Yardage__c;
+                    
+                    Shaving_Invoice.Weekly_Comments__c = ShavingsFor.Name;
+                    system.debug('Shaving_Invoice.Weekly_Comments__c'+Shaving_Invoice.Weekly_Comments__c);
+                    Shavings_InvoiceUpsert.add(Shaving_Invoice);
+                }}
+            
+            } //Initial IF
+            else
+            {
+                
+                Shaving_Invoice__c Shaving_Invoice = new Shaving_Invoice__c();
+                Shaving_Invoice.Shavings__c = ShavingsFor.Id;
+                Shaving_Invoice.Account__c = ShavingsFor.Account__c;
+                Shaving_Invoice.Customer_Email__c = ShavingsFor.Account__r.Email_1__c;
+                Shaving_Invoice.Additional_Email__c = ShavingsFor.Account__r.Email_2__c;
+                Shaving_Invoice.Sales_Tax__c = ShavingsFor.Account__r.Sales_Tax__c;
+                Shaving_Invoice.Invoice_Date__c = ShavingsFor.Visit_Date__c; //56610
+                Shaving_Invoice.Date_Due__c = Shaving_Invoice.Invoice_Date__c+30; //56610
+                Shaving_Invoice.Sales_Tax__c = ShavingsFor.Account__r.Sales_Tax__c;
+                    //check the Yardage in the Shaving record
+                     if(CustomAccountids.contains(ShavingsFor.Account__r.name))
+                    {
+                    Shaving_Invoice.Invoice_Comments__c =ShavingsFor.Load_Type__c.contains('120') ? '120yd'+' load of shavings.' : ShavingsFor.Load_Type__c.contains('30') ? 'Wet & Dry Chip Haul From HEB Snacks - 30yd loads.':ShavingsFor.Load_Type__c.contains('20yd') ? 'Dry Chip Haul From HEB Snacks - 20yd loads.' : ShavingsFor.Load_Type__c.contains('60') ? '60yd' +' load of shavings.' : Shaving_Invoice.Invoice_Comments__c;
+                   If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                   }
+                   else if(commentAccount.contains(ShavingsFor.Account__r.name))//59220
+                    {
+                        Shaving_Invoice.Invoice_Comments__c = ShavingsFor.Account__r.Comments__c;
+                    }
+                    else
+                    {
+                        Shaving_Invoice.Invoice_Comments__c = ShavingsFor.Yardage__c!=null?string.valueof(Integer.valueOf(ShavingsFor.Yardage__c))+'yd':ShavingsFor.Load_Type__c.contains('120') ? '120yd' : ShavingsFor.Load_Type__c.contains('60') ? '60yd' : ShavingsFor.Load_Type__c.contains('30') ? '30yd' : ShavingsFor.Load_Type__c.contains('20') ? '20yd' : Shaving_Invoice.Invoice_Comments__c  ;
+                        Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c + ' load of shavings. ';
+                        
+                        If(ShavingsFor.Account__r.Comments__c != null) //56414
+                        {
+                            Shaving_Invoice.Invoice_Comments__c = Shaving_Invoice.Invoice_Comments__c +  ShavingsFor.Account__r.Comments__c;
+                        }
+                    } 
+                      
+                    if( OthervalueAccount.contains(ShavingsFor.Account__r.name) && ShavingsFor.Load_Type__c.contains('Bad'))
+                    {
+                        Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0;
+                        system.debug('<<<<<<Shaving_Invoice.Rental_Price__c-ifpart>>>>>>>'+Shaving_Invoice.Rental_Price__c);
+                        
+                    }
+                    else
+                    {
+                        if(ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c!= null)
+                        {
+                            Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Per_Yard__c * ShavingsFor.Yardage__c;
+                            system.debug('Shaving_Invoice.Rental_Price__c >>>1>> '+Shaving_Invoice.Rental_Price__c );
+                        }
+                        else if (ShavingsFor.Account__r.Per_Yard__c !=null && ShavingsFor.Yardage__c == null)
+                        {
+                            yardage = integer.valueof(ShavingsFor.Yard_size__c);
+                           
+                             Shaving_Invoice.Rental_Price__c = ShavingsFor.Account__r.Per_Yard__c * yardage ;
+                            
+                            system.debug('Sh_Inv .Rental_Price__c >>>2>> '+Shaving_Invoice.Rental_Price__c );
+                            
+                        }
+                        
+                        else
+                        {
+                            system.debug('<<<<<<<3>>>>>>>>>');
+                            
+                            //Shaving_Invoice.Rental_Price__c =  ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : 0 :0;
+                            Shaving_Invoice.Rental_Price__c =  ShavingsFor.Load_Type__c.contains('120') ? ShavingsFor.Account__r.X120_Yards__c!=null ? ShavingsFor.Account__r.X120_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('20yd') ? ShavingsFor.Account__r.X20_Yards__c!=null ? ShavingsFor.Account__r.X20_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :ShavingsFor.Load_Type__c.contains('30yd') ? ShavingsFor.Account__r.X30_Yards__c!=null ? ShavingsFor.Account__r.X30_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 : ShavingsFor.Load_Type__c.contains('60yd') ? ShavingsFor.Account__r.X60_Yards__c!=null ? ShavingsFor.Account__r.X60_Yards__c : ShavingsFor.Account__r.Other__c!=null ?  ShavingsFor.Account__r.Other__c : 0 :0;
+                            
+                            system.debug('Shaving_Invoice.Rental_Price__c >>>3>> '+Shaving_Invoice.Rental_Price__c );
+                            
+                        }
+                        
+                            system.debug('<<<<<<Shaving_Invoice.Rental_Price__c-elsepart>>>>>>>'+Shaving_Invoice.Rental_Price__c);
+                    }
+                    
+                    Shaving_Invoice.Per_Yard__c = ShavingsFor.Account__r.Per_Yard__c ;
+                    Shaving_Invoice.Yardage__c= ShavingsFor.Yardage__c;
+               
+                Shaving_Invoice.Weekly_Comments__c = ShavingsFor.Name;
+                system.debug('Shaving_Invoice.Weekly_Comments__c'+Shaving_Invoice.Weekly_Comments__c);
+                Shavings_InvoiceUpsert.add(Shaving_Invoice);
+            }
+        }
+        
+        if(Shavings_InvoiceUpsert.size() >0)
+        {
+            try
+            {
+                upsert Shavings_InvoiceUpsert;
+            }
+            catch(Exception e)
+            {
+                System.debug(e);
+            }
+        }
+    }
+    
+    /*
+    //This is commented because it is an old requirement changes in the Driver lookup.
+    public void configureDriver(List<Shavings__c> savingsList){
+        Map<String,id> resourceMap=new Map<string,id>();
+        for(Resource__c res:[Select id,name,Full_Name__c from Resource__c]){
+            resourceMap.put(res.Full_Name__c ,res.id);
+            
+        }
+        if(resourceMap.size()>0){
+            for(Shavings__c sv:savingsList){
+                if(resourceMap.containsKey(sv.Driver__c)){
+                    sv.Driver_lkup__c=resourceMap.get(sv.driver__c);
+                }
+                else{
+                    sv.Driver_lkup__c=null;
+                }
+            }
+        }
+    }
+    */
+    /*=========================================================================================
+*Method Name     : driverupdate 1 st driver
+*Description     : Run before inbsert and update.
+*Arguments       : Pass new map  values from trigger
+=========================================================================================*/ 
+    
+    
+        public  void driverupdate(List<Shavings__c> shavingList){
+        
+        Map<string,id> Resources = new Map<string,id>();
+        for(Resource__c rece:[select id, Full_name__c from Resource__c ])
+        {
+            resources.put(rece.full_name__c,rece.id);
+            system.debug('full name'+ rece.id);
+        }
+        
+        for(Shavings__c shaving : shavingList){
+        system.debug('hourtracker name'+  shaving);
+            if(shaving.Driver__c !=null ){
+        system.debug('emp name'+ shaving.Driver__c);
+                if(resources.containskey(shaving.Driver__c)){
+                    shaving.Driver_lkup__c =Resources.get(shaving.Driver__c);
+                    system.debug('update'+ shaving.Driver_lkup__c);
+
+                    
+                        }
+                
+            }
+            
+        }
+    
+    }
+    
+    //This method is used to updated the driver picklist field based on the driver lookup field values.
+    /*public void configureDriver(List<Shavings__c> savingsLists){
+        system.debug('shaving list is >> '+  savingsLists);
+        Set<Resource__c> resourceSet=new Set<Resource__c>();
+        Set<Id> driverLookupIdSet = new Set<Id>();
+        String DriverName;
+        
+        for(Shavings__c shavingFor :savingsLists){
+            driverLookupIdSet.add(shavingFor.Driver_lkup__c);
+            system.debug('driver lookup id >> '+ driverLookupIdSet);
+        }
+        
+        for(Resource__c res:[Select id,name,Full_Name__c from Resource__c where id = :driverLookupIdSet]){
+            
+            resourceSet.add(res);
+            
+        }
+        if(resourceSet.size()>0){
+            
+            for(Resource__c resourceFor : resourceSet){
+                DriverName = resourceFor.Full_Name__c;
+            }
+            
+            for(Shavings__c sv:savingsLists){
+                    sv.driver__c = DriverName;
+            }
+           
+        }
+    }*/
+    
+    Public void DeleteInvoice(Map<id,Shavings__c> newShaveMap) //56753
+    {
+        set<id> ShavingsID = new set<id>();
+        set<id> ShaveDeleteIds = new set<id>();
+        list<Shavings__c> updateShavings = new list<Shavings__c>();
+        list<Shaving_Invoice__c> deleteInvoice = new list<Shaving_Invoice__c>();
+        for(Shavings__c Shave_for : newShaveMap.values())
+        {
+            ShavingsID.add(Shave_for.id);
+        }
+        
+        
+        
+        for(Shavings__c shave_for : [SELECT Id, Name, Account__r.name,Account__c,Invoice_Number__c,Visit_Date__c,Account__r.Comments__c,Account__r.Per_Yard__c,Yardage__c, Account__r.Shavings_Invoices__c,Trip_Type__c , Account__r.Weekly_Invoice__c, Account__r.X120_Yards__c, Account__r.X20_Yards__c, Account__r.X30_Yards__c, Account__r.X60_Yards__c,  Account__r.Email_1__c, Account__r.Email_2__c, Account__r.Email_3__c, Account__r.Email_4__c, Account__r.Sales_Tax__c, Driver__c, Load_Type__c, Weekly_Invoice__c FROM Shavings__c where Id =: ShavingsID and Invoice_Number__c = 0])
+        {    
+            ShaveDeleteIds.add(shave_for.id);
+        }
+        
+        
+        for(Shaving_Invoice__c Shavings_InvoiceFor : [Select id, Name,Per_Yard__c ,Shavings__r.Order_Value__c,Shavings__r.Invoice_Number__c,Shavings__r.Load_Type__c,Shavings__r.Visit_Date__c,Account__r.name,Account__r.Comments__c,Yardage__c, Shavings__c,Shavings__r.Trip_Type__c,Shavings__r.Yardage__c, Account__c,Account__r.Per_Yard__c , Rental_Price__c, Weekly_Comments__c from Shaving_Invoice__c where Shavings__c =:ShaveDeleteIds])
+        {
+            if(Shavings_InvoiceFor.Shavings__r.Invoice_Number__c == 0)
+            {
+                deleteInvoice.add(Shavings_InvoiceFor );
+            }
+           
+        }
+        
+        for(Shavings__c shave_for : [SELECT Id, Name, Account__r.name,Order_Value__c,Account__c,Invoice_Number__c,Visit_Date__c,Account__r.Comments__c,Account__r.Per_Yard__c,Yardage__c, Account__r.Shavings_Invoices__c,Trip_Type__c , Account__r.Weekly_Invoice__c, Account__r.X120_Yards__c, Account__r.X20_Yards__c, Account__r.X30_Yards__c, Account__r.X60_Yards__c,  Account__r.Email_1__c, Account__r.Email_2__c, Account__r.Email_3__c, Account__r.Email_4__c, Account__r.Sales_Tax__c, Driver__c, Load_Type__c, Weekly_Invoice__c FROM Shavings__c where Id =: ShaveDeleteIds ])
+        {    
+             
+            if(shave_for.Order_Value__c !=0)
+            {
+                shave_for.Order_Value__c = 0;
+                updateShavings.add(shave_for);
+            }
+        
+        }
+        
+            if(deleteInvoice.size()>0)
+            {
+                delete deleteInvoice;
+            }
+            
+            if(updateShavings.size()>0)
+            {
+                update updateShavings;
+            }
+            
+        
+    }
+  
+  
+    Public void InvoiceDateUpdate(Map<id,Shavings__c> newShaveMap) //59220
+    {
+         set<id>shavingsIds = new set<id>();
+         list<shaving_invoice__c> shavingInvlist = new list<shaving_invoice__c>();
+         
+         for(shavings__c shave : newShaveMap.values())
+         {
+             shavingsIds.add(shave.id);    
+             system.debug(shavingsIds);
+         }
+         
+         for(shaving_invoice__c  shavingInvFor: [Select id, Name,Per_Yard__c,Invoice_Date__c ,Date_Due__c ,Shavings__r.Trip_completed__c,Shavings__r.Order_Value__c,Invoice_Status__c,Shavings__r.Invoice_Number__c,Shavings__r.Load_Type__c,Shavings__r.Visit_Date__c,Account__r.name,Account__r.Comments__c,Yardage__c, Shavings__c,Shavings__r.Trip_Type__c,Shavings__r.Yardage__c, Account__c,Account__r.Per_Yard__c , Rental_Price__c, Weekly_Comments__c from Shaving_Invoice__c where Shavings__c =:shavingsIds])
+         {
+             if(shavingInvFor.Invoice_Status__c!='Approved')
+             {
+             shavingInvFor.Invoice_Date__c = date.valueof(shavingInvFor.Shavings__r.Visit_Date__c);
+             shavingInvFor.Date_Due__c = shavingInvFor.Invoice_Date__c+30;
+             
+             shavingInvlist.add(shavingInvFor);
+             system.debug(shavingInvlist);
+             }
+         }
+         
+         try
+         {
+             if(shavingInvlist.size()>0)
+             {  
+                 update shavingInvlist;
+                 system.debug('Updated >>> ');
+             }
+         }
+         catch(exception e)
+         {
+             system.debug('catched e >>> '+e);
+         }             
+         
+    }  
+        
+/*==================Ticket No : 61353==================================
+*Method Name     : YardageChangesUpdateRentalPrice
+*Description     : When change the Yardage in Shavings record it will change the rental price in Invoice.
+*Arguments       : Shaving newShaveMap.
+=======================================================================*/
+    
+    Public void YardageChangesUpdateRentalPrice(Map<id,Shavings__c> newShaveMap) //61353
+    {
+         set<id>shavingsIds = new set<id>();
+         list<shaving_invoice__c> shavingInvlist = new list<shaving_invoice__c>();
+         
+         for(shavings__c shave : newShaveMap.values())
+         {
+             shavingsIds.add(shave.id);    
+             system.debug(shavingsIds);
+         } 
+         
+         for(Shaving_Invoice__c shavingInvFor : [Select id, Name ,Shavings__c,Account__r.name,Account__r.Comments__c,Account__r.Other__c,Account__r.Shavings_Invoices__c,Invoice_Comments__c,Yard_size__c,Shavings__r.Yard_size__c,Shavings__r.Invoice_Number__c,Shavings__r.Visit_Date__c,Shavings__r.Trip_Completed__c,Shavings__r.Trip_Type__c,Shavings__r.Rental_Frequency__c,Clone__c,Shavings__r.Load_Type__c,Account__r.X120_Yards__c,Account__r.X60_Yards__c,Account__r.X30_Yards__c,Account__r.X20_Yards__c,Account__r.Sales_Tax__c,Account__r.Email_2__c,Account__r.Email_1__c,Account__r.Per_Yard__c,Shavings__r.Yardage__c,Shavings__r.Rental_day_End__c,Rental_Price__c ,Invoice_Status__c ,Sales_Tax__c ,Date_Due__c ,Invoice_Date__c, Per_yard__c,Yardage__c,Customer_Email__c,Additional_Email__c,Account__r.Weekly_Invoice__c, Account__c, Weekly_Comments__c, Invoice_Total__c from Shaving_Invoice__c where Shavings__c =:shavingsIds and Account__r.Weekly_Invoice__c!='Yes'])
+         {
+             if(shavingInvFor.Invoice_Status__c!='Approved')
+             {
+                if(shavingInvFor.Account__r.Per_Yard__c !=null && shavingInvFor.Shavings__r.Yardage__c!= null)
+                {
+                    system.debug('<<<<<<<1>>>>>>>>>');
+                    
+                    shavingInvFor.Rental_Price__c = shavingInvFor.Account__r.Per_Yard__c * shavingInvFor.Shavings__r.Yardage__c;
+                    shavingInvFor.Yardage__c = shavingInvFor.Shavings__r.Yardage__c;
+                    shavingInvFor.Invoice_Comments__c = shavingInvFor.Yardage__c!=null?string.valueof(Integer.valueOf(shavingInvFor.Yardage__c))+'yd':shavingInvFor.Shavings__r.Load_Type__c.contains('120') ? '120yd' : shavingInvFor.Shavings__r.Load_Type__c.contains('60') ? '60yd' : shavingInvFor.Shavings__r.Load_Type__c.contains('30') ? '30yd' : shavingInvFor.Shavings__r.Load_Type__c.contains('20') ? '20yd' : shavingInvFor.Invoice_Comments__c  ;
+                    shavingInvFor.Invoice_Comments__c = shavingInvFor.Invoice_Comments__c + ' load of shavings. '; 
+                    If(shavingInvFor.Account__r.Comments__c != null) 
+                    {
+                        shavingInvFor.Invoice_Comments__c = shavingInvFor.Invoice_Comments__c +  shavingInvFor.Account__r.Comments__c;
+                    }
+                    system.debug('shavingInvFor.Rental_Price__c >>>1>> '+shavingInvFor.Rental_Price__c );
+                }
+                else
+                {
+                    if(shavingInvFor.Account__r.Per_Yard__c !=null && shavingInvFor.Shavings__r.Yardage__c == null)
+                    {
+                        system.debug('<<<<<<<2>>>>>>>>>');
+                        decimal yardage = decimal.valueof(shavingInvFor.Yard_size__c);
+                        shavingInvFor.Yardage__c  =null ;
+                        shavingInvFor.Rental_Price__c = shavingInvFor.Account__r.Per_Yard__c * yardage;
+                        shavingInvFor.Invoice_Comments__c = shavingInvFor.Shavings__r.Load_Type__c.contains('120') ? '120yd' : shavingInvFor.Shavings__r.Load_Type__c.contains('60') ? '60yd' : shavingInvFor.Shavings__r.Load_Type__c.contains('30') ? '30yd' : shavingInvFor.Shavings__r.Load_Type__c.contains('20') ? '20yd' : shavingInvFor.Invoice_Comments__c  ;
+                        shavingInvFor.Invoice_Comments__c = shavingInvFor.Invoice_Comments__c + ' load of shavings. '; 
+                        If(shavingInvFor.Account__r.Comments__c != null) 
+                        {
+                            shavingInvFor.Invoice_Comments__c = shavingInvFor.Invoice_Comments__c +  shavingInvFor.Account__r.Comments__c;
+                        }
+                        system.debug('shavingInvFor.Rental_Price__c >>>2>> '+shavingInvFor.Rental_Price__c );
+                    }
+                }
+                
+                   
+             
+             shavingInvlist.add(shavingInvFor);
+             system.debug(shavingInvlist);
+             }
+         }
+         
+         try
+         {
+             if(shavingInvlist.size()>0)
+             {  
+                 update shavingInvlist;
+                 system.debug('Updated >>> ');
+             }
+         }
+         catch(exception e)
+         {
+             system.debug('catched e >>> '+e);
+         } 
+            
+    }
+
+   
+    
+/*==================Ticket No : 71753==================================
+*Method Name     : Update_trip_SMS
+*Description     : Shavings Text #71753
+*Arguments       : Map<id,Shavings__c>NewMap
+=======================================================================*/
+    
+    public void Update_trip_SMS(Map<id,Shavings__c>NewMap)
+    {
+        Map<String, String> Drivers = new Map<String, String>();
+        Map<string,Shavings__c >DriverShavingsMap = new Map<string,Shavings__c >();
+        List<SMS_Log__c> SMS_Log_Creation = new List<SMS_Log__c>();
+
+        
+        for(Shavings__c shave_For : NewMap.values())
+        {
+            if(shave_For.Driver__c!=null && shave_For.Trip_Number__c!=null)
+            {
+                Drivers.put(shave_For.Driver__c,shave_For.Trip_Number__c);
+            }
+        }
+        
+        for(Shavings__c ShavFor : [select id,name,Visit_Date__c,Account__r.Haulbrooke_Account__c,Trip_Completed__c,Phone__c, Load_Type__c, Driver__c, Trip_Number__c from Shavings__c where Driver__C=:Drivers.keyset() and Visit_Date__c =TODAY order by Trip_Number__c ])
+        {
+               if(ShavFor.Trip_Completed__c == null)
+               {
+                    system.debug('inside scheduled >>>');
+                    Integer TripNumberCheck1 = Integer.valueOf(Drivers.get(ShavFor.Driver__c)) + 1;
+                    Integer TripNumberCheck2 = Integer.valueOf(Drivers.get(ShavFor.Driver__c)) + 2;
+                    
+                    system.debug(TripNumberCheck1);
+                    system.debug(TripNumberCheck2);
+                    
+                    if(!DriverShavingsMap.containskey(ShavFor.Driver__c) && (String.valueOf(TripNumberCheck1) == ShavFor.Trip_Number__c || String.valueOf(TripNumberCheck2) == ShavFor.Trip_Number__c ))
+                        DriverShavingsMap.put(ShavFor.Driver__c, ShavFor );
+                    system.debug('checking trip order'+ShavFor.Trip_Number__c );
+               }
+                
+        }
+        
+        
+        for(Shavings__c shave : DriverShavingsMap.Values())
+        {
+            if(shave.Phone__c!= null)
+            {   
+             system.debug('Shave sms sent >>>>');
+             SMS_Log__c SMS_Log1 = new SMS_Log__c();
+             SMS_Log1.Shavings__C = shave.Id;
+             SMS_Log1.From_Number__c = shave.Account__r.Haulbrooke_Account__c == 'San Antonio' ? '+12103612496' : '+12817294975';
+             SMS_Log1.SMS_Details__c = (system.now().format('a') == 'AM' ? 'Good Morning,\n\n' : System.now().hour()<19?'Good Afternoon,\n\n':'Good Evening,\n\n') + Label.Trip_SMS_Shavings.replace('<<SHAVINGSRECORDID>>', shave.Id);
+             SMS_Log1.To_Number__c = shave.Phone__c;
+             SMS_Log_Creation.add(SMS_Log1);
+             
+            }          
+             
+        }
+        
+        
+        try
+        {
+            if(SMS_Log_Creation.size() > 0)
+            {
+                insert SMS_Log_Creation;
+                System.debug('Inserted');
+            }
+        }
+        catch(exception e)
+        {
+            system.debug('EEEEEEEEEEEEEEE>> '+e);
+        }
+    }
+    
+/*=========================================================================================
+*Method Name     : public void UpdateGeocodes()
+*Description     : To update the geocode from the address in Shavings records.
+*Arguments       : To get a new values from Shavings object.
+===========================================================================================*/
+    @future(callout=true)
+    public static void UpdateGeoCodes(Set<ID> newShavingIDSet){
+        system.debug('Inside the UpdateGeoCodes');
+        String address ='';
+        for(Shavings__c  dump : [select id,name,Visit_Date__c,Shipping_Address__c,Trip_Type__c,Account__r.Haulbrooke_Account__c,Trip_Completed__c,GeoCode_Map__Latitude__s, GeoCode_Map__Longitude__s,Phone__c, Load_Type__c, Driver__c, Trip_Number__c from Shavings__c where id=:newShavingIDSet]){
+            
+            if(dump.Shipping_Address__c!=null)
+            {
+                address += dump.Shipping_Address__c;
+                address = EncodingUtil.urlEncode(address, 'UTF-8');
+            }else{
+                address += dump.Shipping_Address__c;
+                address = EncodingUtil.urlEncode(address, 'UTF-8');            
+            }
+            String geocodingKey = Label.Google_Map_API_Key;
+            System.debug('address:'+address);
+            
+            
+            Http h = new Http();
+            HttpRequest req = new HttpRequest();
+            // req.setEndpoint('https://maps.googleapis.com/maps/api/geocode/json?address='+'1600'+'Amphitheatre'+'Parkway,'+'Mountain'+'View,'+'CA'+'&key='+geocodingKey);
+            req.setEndpoint('https://maps.googleapis.com/maps/api/geocode/json?address='+address+'&key='+geocodingKey+'&sensor=false');
+            req.setMethod('GET');
+            req.setTimeout(5000);
+            try{
+                JSONParser parser;
+                HttpResponse res = new HttpResponse();
+                if(Test.isRunningTest())
+                {
+                    string str=' {"results" : [      {         "formatted_address" : "6292 Montgomery Dr, San Antonio, TX 78239, USA",         "geometry" : {            "location" : {               "lat" : 29.511748,               "lng" : -98.36571049999999            },            "location_type" : "ROOFTOP",            "viewport" : {               "northeast" : {                  "lat" : 29.5130829302915,                  "lng" : -98.3642398697085               },               "southwest" : {                  "lat" : 29.5103849697085,                  "lng" : -98.3669378302915               }            }         },         "place_id" : "ChIJOcRh5TrzXIYRZTbWcKpfjTo",         "types" : [ "premise" ]      }   ],   "status" : "OK"}';
+                    parser = JSON.createParser(str);
+                }
+                else
+                {
+                    res = h.send(req);
+                    parser = JSON.createParser(res.getBody());
+                }
+                //  parse coordinates from response
+                system.debug('Response is '+res.getBody());
+                double lat = null;
+                double lon = null;
+                while (parser.nextToken() != null) {
+                    
+                    if ((parser.getCurrentToken() == JSONToken.FIELD_NAME) && (parser.getText() == 'location')){
+                        parser.nextToken(); // object start
+                        
+                        while (parser.nextToken() != JSONToken.END_OBJECT){
+                            
+                            String txt = parser.getText();
+                            
+                            parser.nextToken();
+                            
+                            if (txt == 'lat'){
+                                
+                                lon= parser.getDoubleValue();
+                                system.debug('lat is '+lon);
+                            }
+                            else if (txt == 'lng'){
+                                
+                                lat = parser.getDoubleValue();
+                                system.debug('lon is '+lat);
+                            }
+                        }
+                        
+                    }
+                    
+                }
+                
+                // update coordinates if we get back
+                if (lat != null){            
+                    system.debug(lat+' '+lon);
+                    dump.GeoCode_Map__Longitude__s= lat;
+                    system.debug('dump.Geocodes__Longitude__s:'+dump.GeoCode_Map__Longitude__s);
+                    dump.GeoCode_Map__Latitude__s = lon;
+                    system.debug('dump.Geocodes__Longitude__s :'+dump.GeoCode_Map__Latitude__s );
+                    update dump;
+                }
+            }
+            
+            catch (Exception e) {
+                system.debug(e);
+            }
+        }  
+    } 
+}
