@@ -1,0 +1,950 @@
+*============================================================================================================
+*Class Name     : ShavingTriggerHandlerTest
+*Description    : All the implementations related to Shaving object for Test Class
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 7th May, 2019
+*Version        : 1.0
+*Methods        : public static testMethod void ShavingTriggerHandlerTest();
+*============================================================================================================*/
+@isTest
+public class ShavingTriggerHandlerTest{
+    
+    @isTest
+    public static  void ShavingTriggerHandlerTest(){ 
+        
+        Account ac = new Account();
+        ac.Name = 'Testing Account';
+        ac.Weekly_Invoice__c = 'Yes';
+        ac.Per_Yard__c = 10;
+        ac.Industry = 'Shavings Consumer';
+        ac.Comments__c = 'test';
+        insert ac;          
+        
+        Shavings__c shave = new Shavings__c();
+        shave.Account__c = ac.id;
+        shave.Comments__c = 'Testing comments';
+        Shave.Driver__c = 'Bino Ortiz';
+        Shave.Load_Type__c = '20yd - Bad';
+        shave.Phone__c = '13265';
+        shave.Trip_Type__c = 'Delivery';
+        shave.Visit_Date__c = Date.newinstance(2019,05,09);
+        insert shave;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+       
+        
+        
+        
+        Shave.Clone__c = 4;
+        Shave.Account_To__c = ac.id;
+        Shave.Trip_Number__c = '3';
+        Shave.Trip_Completed__c = DateTime.newInstance(2019,05,09);        
+        update shave;  
+        system.assertNotEquals(Null, Shave.Clone__c);
+        
+        Shavings__c shave2 = new Shavings__c();
+        shave2.Account__c = ac.id;
+        shave2.Comments__c = 'Testing comments';
+        Shave2.Driver__c = 'Bino Ortiz';
+        Shave2.Load_Type__c = '20yd - Bad';
+        shave2.Phone__c = '13265';
+        shave2.Trip_Type__c = 'Rental';
+        shave2.Visit_Date__c = system.today();
+        shave2.Yardage__c = 20;
+        shave2.Rental_day_Start__c = system.today();
+        shave2.Rental_day_End__c = system.today()+20;
+        shave2.Rental_Frequency__c = 2;
+        insert shave2;
+        
+        
+        Shavings__c shave3 = new Shavings__c();
+        shave3.Account__c = ac.id;
+        shave3.Comments__c = 'Testing comments';
+        Shave3.Driver__c = 'Bino Ortiz';
+        Shave3.Load_Type__c = '20yd - Bad';
+        shave3.Phone__c = '13265';
+        shave3.Trip_Type__c = 'Rental';
+        shave3.Visit_Date__c = system.today();
+        shave3.Rental_day_Start__c = system.today();
+        shave3.Rental_day_End__c = system.today()+20;
+        shave3.Rental_Frequency__c = 2;
+        insert shave3;
+        
+    }
+    
+    public static testMethod void ShavingTriggerHandlerTest2(){ 
+        
+        Account ac = new Account();
+        ac.Name = 'Test Account 2';
+        ac.Weekly_Invoice__c = 'Yes';
+        ac.Per_Yard__c = 10;
+        ac.Industry = 'Shavings Consumer';
+        ac.Comments__c = 'test';
+        insert ac;          
+        
+        Shavings__c shave = new Shavings__c();
+        shave.Account__c = ac.id;
+        shave.Comments__c = 'Testing comments';
+        Shave.Driver__c = 'Bino Ortiz';
+        Shave.Load_Type__c = '20yd - Bad';
+        shave.Phone__c = '13265';
+        shave.Trip_Type__c = 'Delivery';
+        shave.Visit_Date__c =  Date.newinstance(2022,05,09);
+        insert shave;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave1 = new Shavings__c();
+        shave1.Account__c = ac.id;
+        shave1.Comments__c = 'Testing comments';
+        Shave1.Driver__c = 'Bino Ortiz';
+        Shave1.Load_Type__c = '30yd - Bad';
+        shave1.Phone__c = '13265';
+        shave1.Trip_Type__c = 'Delivery';
+        shave1.Visit_Date__c =  Date.newinstance(2022,05,09);
+        insert shave1;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave2 = new Shavings__c();
+        shave2.Account__c = ac.id;
+        shave2.Comments__c = 'Testing comments';
+        Shave2.Driver__c = 'Bino Ortiz';
+        Shave2.Load_Type__c = '30yd - Bad';
+        shave2.Phone__c = '13265';
+        shave2.Trip_Type__c = 'Delivery';
+        shave2.Visit_Date__c =  Date.newinstance(2022,05,09);
+        insert shave2;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave4 = new Shavings__c();
+        shave4.Account__c = ac.id;
+        shave4.Comments__c = 'Testing comments';
+        Shave4.Driver__c = 'Bino Ortiz';
+        Shave4.Load_Type__c = '60yd - Bad';
+        shave4.Phone__c = '13265';
+        shave4.Trip_Type__c = 'Rental';
+        shave4.Visit_Date__c =  Date.newinstance(2022,05,09);
+        shave4.Rental_day_Start__c = system.today();
+        shave4.Rental_day_End__c = system.today()+20;
+        shave4.Rental_Frequency__c = 2;
+        shave4.Invoice_Number__c =0;
+        insert shave4;
+        
+        /*Shave.Clone__c = 4;
+Shave.Account_To__c = ac.id;
+Shave.Trip_Number__c = '3';
+Shave.Trip_Completed__c = DateTime.newInstance(2019,05,09);
+update shave;  
+system.assertNotEquals(Null, Shave.Clone__c);*/
+        
+        Shavings__c shave3 = new Shavings__c();
+        shave3.Account__c = ac.id;
+        shave3.Comments__c = 'Testing comments';
+        Shave3.Driver__c = 'Bino Ortiz';
+        Shave3.Load_Type__c = '30yd - Bad';
+        shave3.Phone__c = '13265';
+        shave3.Trip_Type__c = 'Rental';
+        shave3.Visit_Date__c = Date.newinstance(2022,05,09);
+        shave3.Yardage__c = 20;
+        shave3.Rental_day_Start__c = system.today();
+        shave3.Rental_day_End__c = system.today()+20;
+        shave3.Rental_Frequency__c = 2;
+        
+        insert shave3;
+        
+        
+        
+        Shaving_invoice__c shavein = new Shaving_invoice__c();
+        
+        shavein.Account__c = ac.id;
+        shavein.Invoice_Comments__c = 'Testing comments';
+        shavein.Description__c = 'Testing comments';
+        shavein.Shavings__c = shave.id;
+        
+        shavein.Invoice_Status__c='Unapproved';
+        shavein.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein.Weekly_Comments__c = 'test';
+        
+        insert shavein;
+        
+        
+        Shaving_invoice__c shavein1 = new Shaving_invoice__c();
+        
+        shavein1.Account__c = ac.id;
+        shavein1.Invoice_Comments__c = 'Testing comments';
+        shavein1.Description__c = 'Testing comments';
+        shavein1.Shavings__c = shave3.id;
+        shavein1.Rental_Price__c = 10;
+        shavein1.Invoice_Status__c='Unapproved';
+        shavein1.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein1.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein1.Weekly_Comments__c = 'test';
+        
+        insert shavein1;
+        
+        
+        map<id,shavings__c> shavemap = new map<id,shavings__c>();
+        shavemap.put(shave.id,shave);
+        Test.startTest();
+        shave.Trip_Completed__c =  DateTime.newInstance(2022,05,09);
+        shave2.Trip_Completed__c =  DateTime.newInstance(2022,05,09);
+        shave3.Trip_Completed__c =  DateTime.newInstance(2022,05,09);
+        shave4.Trip_Completed__c =  DateTime.newInstance(2022,05,09);    
+        shave4.Invoice_Number__c =0;
+        update shave3;
+        update shave4;
+        update shave2;
+        update shave;
+        
+        delete shavein;
+        
+        shave.Order_Value__c  = 0;
+        update shave;
+        
+        ShavingTriggerHandler sth = new ShavingTriggerHandler();
+        sth.DeleteInvoice(shavemap);
+        
+        Test.stopTest();
+        
+    }
+    
+     public static testMethod void ShavingTriggerHandlerTest3(){ 
+        
+        Account ac = new Account();
+        ac.Name = 'Nordstrom';
+        ac.Weekly_Invoice__c = 'Yes';
+        ac.Per_Yard__c = 10;
+        ac.Industry = 'Shavings Consumer';
+        ac.Comments__c = 'test';
+        insert ac;          
+        
+        Shavings__c shave = new Shavings__c();
+        shave.Account__c = ac.id;
+        shave.Comments__c = 'Testing comments';
+        Shave.Driver__c = 'Bino Ortiz';
+        Shave.Load_Type__c = '20yd - Bad';
+        shave.Phone__c = '13265';
+        shave.Trip_Type__c = 'Delivery';
+        shave.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave1 = new Shavings__c();
+        shave1.Account__c = ac.id;
+        shave1.Comments__c = 'Testing comments';
+        Shave1.Driver__c = 'Bino Ortiz';
+        Shave1.Load_Type__c = '30yd - Bad';
+        shave1.Phone__c = '13265';
+        shave1.Trip_Type__c = 'Delivery';
+        shave1.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave1;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave2 = new Shavings__c();
+        shave2.Account__c = ac.id;
+        shave2.Comments__c = 'Testing comments';
+        Shave2.Driver__c = 'Bino Ortiz';
+        Shave2.Load_Type__c = '30yd - Bad';
+        shave2.Phone__c = '13265';
+        shave2.Trip_Type__c = 'Delivery';
+        shave2.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave2;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave4 = new Shavings__c();
+        shave4.Account__c = ac.id;
+        shave4.Comments__c = 'Testing comments';
+        Shave4.Driver__c = 'Bino Ortiz';
+        Shave4.Load_Type__c = '60yd - Bad';
+        shave4.Phone__c = '13265';
+        shave4.Trip_Type__c = 'Rental';
+        shave4.Visit_Date__c =  Date.newinstance(2021,05,09);
+        shave4.Rental_day_Start__c = system.today();
+        shave4.Rental_day_End__c = system.today()+20;
+        shave4.Rental_Frequency__c = 2;
+        shave4.Invoice_Number__c =0;
+        insert shave4;
+        
+        /*Shave.Clone__c = 4;
+Shave.Account_To__c = ac.id;
+Shave.Trip_Number__c = '3';
+Shave.Trip_Completed__c = DateTime.newInstance(2019,05,09);
+update shave;  
+system.assertNotEquals(Null, Shave.Clone__c);*/
+        
+        Shavings__c shave3 = new Shavings__c();
+        shave3.Account__c = ac.id;
+        shave3.Comments__c = 'Testing comments';
+        Shave3.Driver__c = 'Bino Ortiz';
+        Shave3.Load_Type__c = '30yd - Bad';
+        shave3.Phone__c = '13265';
+        shave3.Trip_Type__c = 'Rental';
+        shave3.Visit_Date__c = Date.newinstance(2021,05,09);
+        shave3.Yardage__c = 20;
+        shave3.Rental_day_Start__c = system.today();
+        shave3.Rental_day_End__c = system.today()+20;
+        shave3.Rental_Frequency__c = 2;
+        
+        insert shave3;
+        
+        
+        Shaving_invoice__c shavein = new Shaving_invoice__c();
+        
+        shavein.Account__c = ac.id;
+        shavein.Invoice_Comments__c = 'Testing comments';
+        shavein.Description__c = 'Testing comments';
+        shavein.Shavings__c = shave.id;
+        
+        shavein.Invoice_Status__c='Unapproved';
+        shavein.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein.Weekly_Comments__c = 'test';
+        
+        insert shavein;
+        
+        
+        Shaving_invoice__c shavein1 = new Shaving_invoice__c();
+        
+        shavein1.Account__c = ac.id;
+        shavein1.Invoice_Comments__c = 'Testing comments';
+        shavein1.Description__c = 'Testing comments';
+        shavein1.Shavings__c = shave3.id;
+        shavein1.Rental_Price__c = 10;
+        shavein1.Invoice_Status__c='Unapproved';
+        shavein1.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein1.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein1.Weekly_Comments__c = 'test';
+        
+        insert shavein1;
+        
+        
+        map<id,shavings__c> shavemap = new map<id,shavings__c>();
+        shavemap.put(shave.id,shave);
+        Test.startTest();
+        shave.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave2.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave3.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave4.Trip_Completed__c =  DateTime.newInstance(2021,05,09);    
+        shave4.Invoice_Number__c =0;
+        update shave3;
+        update shave4;
+        update shave2;
+        update shave;
+        
+        delete shavein;
+        
+        shave.Order_Value__c  = 0;
+        update shave;
+        
+        ShavingTriggerHandler sth = new ShavingTriggerHandler();
+        sth.DeleteInvoice(shavemap);
+        
+        Test.stopTest();
+        
+    }
+    
+    public static testMethod void ShavingTriggerHandlerTest4(){ 
+        
+        Account ac = new Account();
+        ac.Name = 'Test Account';
+        ac.Weekly_Invoice__c = 'Yes';
+        ac.Per_Yard__c = 10;
+        ac.Industry = 'Shavings Consumer';
+        ac.Comments__c = 'test';
+        insert ac;          
+        
+         Account ac2 = new Account();
+        ac2.Name = 'Test Accounts';
+        ac2.Per_Yard__c = 10;
+        ac2.Industry = 'Shavings Consumer';
+        ac2.Comments__c = 'test';
+        insert ac2; 
+        
+        Shavings__c shave = new Shavings__c();
+        shave.Account__c = ac.id;
+        shave.Comments__c = 'Testing comments';
+        Shave.Driver__c = 'Bino Ortiz';
+        Shave.Load_Type__c = '20yd - Bad';
+        shave.Phone__c = '13265';
+        shave.Trip_Type__c = 'Delivery';
+        shave.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave1 = new Shavings__c();
+        shave1.Account__c = ac.id;
+        shave1.Comments__c = 'Testing comments';
+        Shave1.Driver__c = 'Bino Ortiz';
+        Shave1.Load_Type__c = '30yd - Bad';
+        shave1.Phone__c = '13265';
+        shave1.Trip_Type__c = 'Delivery';
+        shave1.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave1;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        
+        
+        Shavings__c shave2 = new Shavings__c();
+        shave2.Account__c = ac.id;
+        shave2.Comments__c = 'Testing comments';
+        Shave2.Driver__c = 'Bino Ortiz';
+        Shave2.Load_Type__c = '30yd - Bad';
+        shave2.Phone__c = '13265';
+        shave2.Trip_Type__c = 'Delivery';
+        shave2.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave2;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave4 = new Shavings__c();
+        shave4.Account__c = ac.id;
+        shave4.Comments__c = 'Testing comments';
+        Shave4.Driver__c = 'Bino Ortiz';
+        Shave4.Load_Type__c = '60yd - Bad';
+        shave4.Phone__c = '13265';
+        shave4.Trip_Type__c = 'Rental';
+        shave4.Visit_Date__c =  Date.newinstance(2021,05,09);
+        shave4.Rental_day_Start__c = system.today();
+        shave4.Rental_day_End__c = system.today()+20;
+        shave4.Rental_Frequency__c = 2;
+        shave4.Invoice_Number__c =0;
+        insert shave4;
+        
+        /*Shave.Clone__c = 4;
+Shave.Account_To__c = ac.id;
+Shave.Trip_Number__c = '3';
+Shave.Trip_Completed__c = DateTime.newInstance(2019,05,09);
+update shave;  
+system.assertNotEquals(Null, Shave.Clone__c);*/
+        
+        Shavings__c shave3 = new Shavings__c();
+        shave3.Account__c = ac.id;
+        shave3.Comments__c = 'Testing comments';
+        Shave3.Driver__c = 'Bino Ortiz';
+        Shave3.Load_Type__c = '30yd - Bad';
+        shave3.Phone__c = '13265';
+        shave3.Trip_Type__c = 'Rental';
+        shave3.Visit_Date__c = Date.newinstance(2021,05,09);
+        shave3.Yardage__c = 20;
+        shave3.Rental_day_Start__c = system.today();
+        shave3.Rental_day_End__c = system.today()+20;
+        shave3.Rental_Frequency__c = 2;
+        
+        insert shave3;
+        
+
+        
+        Shaving_invoice__c shavein = new Shaving_invoice__c();
+        
+        shavein.Account__c = ac.id;
+        shavein.Invoice_Comments__c = 'Testing comments';
+        shavein.Description__c = 'Testing comments';
+        shavein.Shavings__c = shave.id;
+        
+        shavein.Invoice_Status__c='Unapproved';
+        shavein.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein.Weekly_Comments__c = 'test';
+        
+        insert shavein;
+        
+        
+        Shaving_invoice__c shavein1 = new Shaving_invoice__c();
+        
+        shavein1.Account__c = ac.id;
+        shavein1.Invoice_Comments__c = 'Testing comments';
+        shavein1.Description__c = 'Testing comments';
+        shavein1.Shavings__c = shave3.id;
+        shavein1.Rental_Price__c = 10;
+        shavein1.Invoice_Status__c='Unapproved';
+        shavein1.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein1.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein1.Weekly_Comments__c = 'test';
+        
+        insert shavein1;
+        
+         Shavings__c shave5 = new Shavings__c();
+        shave5.Account__c = ac2.id;
+        shave5.Comments__c = 'Testing comments';
+        Shave5.Driver__c = 'Bino Ortiz';
+        Shave5.Load_Type__c = '30yd - Bad';
+        shave5.Phone__c = '13265';
+        shave5.Trip_Type__c = 'Rental';
+        shave5.Visit_Date__c = Date.newinstance(2021,05,09);
+        shave5.Yardage__c = 20;
+        shave5.Rental_day_Start__c = system.today();
+        shave5.Rental_day_End__c = system.today()+20;
+        shave5.Rental_Frequency__c = 2;
+        
+        insert shave5;
+        
+        Shaving_invoice__c shavein2 = new Shaving_invoice__c();
+        
+        shavein2.Account__c = ac.id;
+        shavein2.Invoice_Comments__c = 'Testing comments';
+        shavein2.Description__c = 'Testing comments';
+        shavein2.Shavings__c = shave5.id;
+        shavein2.Invoice_Status__c='Unapproved';
+        shavein2.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein2.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein2.Weekly_Comments__c = 'test';
+        
+        insert shavein2;
+        
+        
+        map<id,shavings__c> shavemap = new map<id,shavings__c>();
+        shavemap.put(shave.id,shave);
+         map<id,shavings__c> shavemap2 = new map<id,shavings__c>();
+        shavemap2.put(shave5.id,shave5);
+        
+    
+        
+        Test.startTest();
+        shave.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave2.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave3.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave4.Trip_Completed__c =  DateTime.newInstance(2021,05,09);    
+        shave4.Invoice_Number__c =0;
+        
+        Attachment attach1=new Attachment();
+        attach1.Name='Unit Test Attachment';
+        attach1.parentId=shave.Id;
+        attach1.Description = 'Test';
+        Blob bodyBlob1=Blob.valueOf('Unit Test Attachment Body');
+        attach1.body=bodyBlob1;
+        attach1.ContentType = 'application/msword';
+        attach1.IsPrivate = false;
+        insert attach1; 
+        
+        
+              
+        update shave3;
+        update shave4;
+        update shave2;
+        update shave;
+        
+        delete shavein;
+        
+        shave.Order_Value__c  = 0;
+        update shave;
+        
+        shavein2.Rental_Price__c = 200;
+        shavein2.Invoice_Comments__c = 'test';
+        shavein2.Yardage__c = 20;
+        
+        update shavein2;
+        
+        
+        set<id>shaveids = new set<id>();
+        
+        Shavings__c shave6 = new Shavings__c();
+        shave6.Account__c = ac.id;
+        shave6.Comments__c = 'Testing comments';
+        Shave6.Driver__c = 'Bino Ortiz';
+        Shave6.Load_Type__c = '20yd - Bad';
+        shave6.Phone__c = '13265';
+        shave6.Trip_Type__c = 'Delivery';
+        shave6.Shipping_Address__c = '77520';
+        shave6.Visit_Date__c =  Date.newinstance(2021,12,12);
+        insert shave6;
+                
+        ShavingTriggerHandler sth = new ShavingTriggerHandler();
+        sth.DeleteInvoice(shavemap);
+        sth.InvoiceDateUpdate(shavemap);       
+        sth.YardageChangesUpdateRentalPrice(shavemap2);
+        sth.Update_trip_SMS(shavemap);
+       // ShavingTriggerHandler.UpdateGeoCodes(shaveids);
+        Test.stopTest();
+        
+    }
+    
+    public static testMethod void ShavingTriggerHandlerTest5(){ 
+        
+        Account ac = new Account();
+        ac.Name = 'Capital Hardwoods and Millwork';
+        ac.Weekly_Invoice__c = 'Yes';
+        ac.Per_Yard__c = 10;
+        ac.Industry = 'Shavings Consumer';
+        ac.Comments__c = 'test';
+        insert ac;          
+        
+        Shavings__c shave = new Shavings__c();
+        shave.Account__c = ac.id;
+        shave.Comments__c = 'Testing comments';
+        Shave.Driver__c = 'Bino Ortiz';
+        Shave.Load_Type__c = '20yd - Bad';
+        shave.Phone__c = '13265';
+        shave.Trip_Type__c = 'Delivery';
+        shave.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave1 = new Shavings__c();
+        shave1.Account__c = ac.id;
+        shave1.Comments__c = 'Testing comments';
+        Shave1.Driver__c = 'Bino Ortiz';
+        Shave1.Load_Type__c = '30yd - Bad';
+        shave1.Phone__c = '13265';
+        shave1.Trip_Type__c = 'Delivery';
+        shave1.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave1;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave2 = new Shavings__c();
+        shave2.Account__c = ac.id;
+        shave2.Comments__c = 'Testing comments';
+        Shave2.Driver__c = 'Bino Ortiz';
+        Shave2.Load_Type__c = '30yd - Bad';
+        shave2.Phone__c = '13265';
+        shave2.Trip_Type__c = 'Delivery';
+        shave2.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave2;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave4 = new Shavings__c();
+        shave4.Account__c = ac.id;
+        shave4.Comments__c = 'Testing comments';
+        Shave4.Driver__c = 'Bino Ortiz';
+        Shave4.Load_Type__c = '60yd - Bad';
+        shave4.Phone__c = '13265';
+        shave4.Trip_Type__c = 'Rental';
+        shave4.Visit_Date__c =  Date.newinstance(2021,05,09);
+        shave4.Rental_day_Start__c = system.today();
+        shave4.Rental_day_End__c = system.today()+20;
+        shave4.Rental_Frequency__c = 2;
+        shave4.Invoice_Number__c =0;
+        insert shave4;
+        
+        /*Shave.Clone__c = 4;
+Shave.Account_To__c = ac.id;
+Shave.Trip_Number__c = '3';
+Shave.Trip_Completed__c = DateTime.newInstance(2019,05,09);
+update shave;  
+system.assertNotEquals(Null, Shave.Clone__c);*/
+        
+        Shavings__c shave3 = new Shavings__c();
+        shave3.Account__c = ac.id;
+        shave3.Comments__c = 'Testing comments';
+        Shave3.Driver__c = 'Bino Ortiz';
+        Shave3.Load_Type__c = '30yd - Bad';
+        shave3.Phone__c = '13265';
+        shave3.Trip_Type__c = 'Rental';
+        shave3.Visit_Date__c = Date.newinstance(2021,05,09);
+        shave3.Yardage__c = 20;
+        shave3.Rental_day_Start__c = system.today();
+        shave3.Rental_day_End__c = system.today()+20;
+        shave3.Rental_Frequency__c = 2;
+        
+        insert shave3;
+        
+        
+        Shaving_invoice__c shavein = new Shaving_invoice__c();
+        
+        shavein.Account__c = ac.id;
+        shavein.Invoice_Comments__c = 'Testing comments';
+        shavein.Description__c = 'Testing comments';
+        shavein.Shavings__c = shave.id;
+        
+        shavein.Invoice_Status__c='Unapproved';
+        shavein.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein.Weekly_Comments__c = 'test';
+        
+        insert shavein;
+        
+        
+        Shaving_invoice__c shavein1 = new Shaving_invoice__c();
+        
+        shavein1.Account__c = ac.id;
+        shavein1.Invoice_Comments__c = 'Testing comments';
+        shavein1.Description__c = 'Testing comments';
+        shavein1.Shavings__c = shave3.id;
+        shavein1.Rental_Price__c = 10;
+        shavein1.Invoice_Status__c='Unapproved';
+        shavein1.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein1.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein1.Weekly_Comments__c = 'test';
+        
+        insert shavein1;
+        
+        
+        map<id,shavings__c> shavemap = new map<id,shavings__c>();
+        shavemap.put(shave.id,shave);
+        Test.startTest();
+        shave.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave2.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave3.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave4.Trip_Completed__c =  DateTime.newInstance(2021,05,09);    
+        shave4.Invoice_Number__c =0;
+        update shave3;
+        update shave4;
+        update shave2;
+        update shave;
+        
+        delete shavein;
+        
+        shave.Order_Value__c  = 0;
+        update shave;
+        
+        ShavingTriggerHandler sth = new ShavingTriggerHandler();
+        sth.DeleteInvoice(shavemap);
+        
+        Test.stopTest();
+        
+    }
+    public static testMethod void ShavingTriggerHandlerTest6(){ 
+        
+        Account ac = new Account();
+        ac.Name = 'HEB Snacks';
+        ac.Weekly_Invoice__c = 'Yes';
+        ac.Per_Yard__c = 10;
+        ac.Industry = 'Shavings Consumer';
+        ac.Comments__c = 'test';
+        insert ac;          
+        
+         Account ac2 = new Account();
+        ac2.Name = 'Test Accounts';
+        ac2.Per_Yard__c = 10;
+        ac2.Industry = 'Shavings Consumer';
+        ac2.Comments__c = 'test';
+        insert ac2; 
+        
+        Shavings__c shave = new Shavings__c();
+        shave.Account__c = ac.id;
+        shave.Comments__c = 'Testing comments';
+        Shave.Driver__c = 'Bino Ortiz';
+        Shave.Load_Type__c = '20yd - Bad';
+        shave.Phone__c = '13265';
+        shave.Trip_Type__c = 'Delivery';
+        shave.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave1 = new Shavings__c();
+        shave1.Account__c = ac.id;
+        shave1.Comments__c = 'Testing comments';
+        Shave1.Driver__c = 'Bino Ortiz';
+        Shave1.Load_Type__c = '30yd - Bad';
+        shave1.Phone__c = '13265';
+        shave1.Trip_Type__c = 'Delivery';
+        shave1.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave1;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        
+        
+        Shavings__c shave2 = new Shavings__c();
+        shave2.Account__c = ac.id;
+        shave2.Comments__c = 'Testing comments';
+        Shave2.Driver__c = 'Bino Ortiz';
+        Shave2.Load_Type__c = '30yd - Bad';
+        shave2.Phone__c = '13265';
+        shave2.Trip_Type__c = 'Delivery';
+        shave2.Visit_Date__c =  Date.newinstance(2021,05,09);
+        insert shave2;
+        shave.For_or_In_Storage__c = 'Yes';
+        System.assertEquals(ac.id, shave.Account__c);
+        
+        Shavings__c shave4 = new Shavings__c();
+        shave4.Account__c = ac.id;
+        shave4.Comments__c = 'Testing comments';
+        Shave4.Driver__c = 'Bino Ortiz';
+        Shave4.Load_Type__c = '60yd - Bad';
+        shave4.Phone__c = '13265';
+        shave4.Trip_Type__c = 'Rental';
+        shave4.Visit_Date__c =  Date.newinstance(2021,05,09);
+        shave4.Rental_day_Start__c = system.today();
+        shave4.Rental_day_End__c = system.today()+20;
+        shave4.Rental_Frequency__c = 2;
+        shave4.Invoice_Number__c =0;
+        insert shave4;
+        
+        /*Shave.Clone__c = 4;
+Shave.Account_To__c = ac.id;
+Shave.Trip_Number__c = '3';
+Shave.Trip_Completed__c = DateTime.newInstance(2019,05,09);
+update shave;  
+system.assertNotEquals(Null, Shave.Clone__c);*/
+        
+        Shavings__c shave3 = new Shavings__c();
+        shave3.Account__c = ac.id;
+        shave3.Comments__c = 'Testing comments';
+        Shave3.Driver__c = 'Bino Ortiz';
+        Shave3.Load_Type__c = '30yd - Bad';
+        shave3.Phone__c = '13265';
+        shave3.Trip_Type__c = 'Rental';
+        shave3.Visit_Date__c = Date.newinstance(2021,05,09);
+        shave3.Yardage__c = 20;
+        shave3.Rental_day_Start__c = system.today();
+        shave3.Rental_day_End__c = system.today()+20;
+        shave3.Rental_Frequency__c = 2;
+        
+        insert shave3;
+        
+
+        
+        Shaving_invoice__c shavein = new Shaving_invoice__c();
+        
+        shavein.Account__c = ac.id;
+        shavein.Invoice_Comments__c = 'Testing comments';
+        shavein.Description__c = 'Testing comments';
+        shavein.Shavings__c = shave.id;
+        
+        shavein.Invoice_Status__c='Unapproved';
+        shavein.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein.Weekly_Comments__c = 'test';
+        
+        insert shavein;
+        
+        
+        Shaving_invoice__c shavein1 = new Shaving_invoice__c();
+        
+        shavein1.Account__c = ac.id;
+        shavein1.Invoice_Comments__c = 'Testing comments';
+        shavein1.Description__c = 'Testing comments';
+        shavein1.Shavings__c = shave3.id;
+        shavein1.Rental_Price__c = 10;
+        shavein1.Invoice_Status__c='Unapproved';
+        shavein1.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein1.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein1.Weekly_Comments__c = 'test';
+        
+        insert shavein1;
+        
+         Shavings__c shave5 = new Shavings__c();
+        shave5.Account__c = ac2.id;
+        shave5.Comments__c = 'Testing comments';
+        Shave5.Driver__c = 'Bino Ortiz';
+        Shave5.Load_Type__c = '30yd - Bad';
+        shave5.Phone__c = '13265';
+        shave5.Trip_Type__c = 'Rental';
+        shave5.Visit_Date__c = Date.newinstance(2021,05,09);
+        shave5.Yardage__c = 20;
+        shave5.Rental_day_Start__c = system.today();
+        shave5.Rental_day_End__c = system.today()+20;
+        shave5.Rental_Frequency__c = 2;
+        
+        insert shave5;
+        
+        Shaving_invoice__c shavein2 = new Shaving_invoice__c();
+        
+        shavein2.Account__c = ac.id;
+        shavein2.Invoice_Comments__c = 'Testing comments';
+        shavein2.Description__c = 'Testing comments';
+        shavein2.Shavings__c = shave5.id;
+        shavein2.Invoice_Status__c='Unapproved';
+        shavein2.Additional_Email__c = 'salesforcetestwork@gmail.com';  
+        shavein2.Customer_Email__c = 'salesforcetestwork@gmail.com';
+        shavein2.Weekly_Comments__c = 'test';
+        
+        insert shavein2;
+        
+        
+        map<id,shavings__c> shavemap = new map<id,shavings__c>();
+        shavemap.put(shave.id,shave);
+         map<id,shavings__c> shavemap2 = new map<id,shavings__c>();
+        shavemap2.put(shave5.id,shave5);
+        
+    
+        
+        Test.startTest();
+        shave.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave2.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave3.Trip_Completed__c =  DateTime.newInstance(2021,05,09);
+        shave4.Trip_Completed__c =  DateTime.newInstance(2021,05,09);    
+        shave4.Invoice_Number__c =0;
+        
+        Attachment attach1=new Attachment();
+        attach1.Name='Unit Test Attachment';
+        attach1.parentId=shave.Id;
+        attach1.Description = 'Test';
+        Blob bodyBlob1=Blob.valueOf('Unit Test Attachment Body');
+        attach1.body=bodyBlob1;
+        attach1.ContentType = 'application/msword';
+        attach1.IsPrivate = false;
+        insert attach1; 
+        Attachment attach2=new Attachment();
+        attach2.Name='Unit Test Attachment2';
+        attach2.parentId=shave2.Id;
+        attach2.Description = 'Test2';
+        Blob bodyBlob2=Blob.valueOf('Unit Test Attachment Body2');
+        attach2.body=bodyBlob2;
+        attach2.ContentType = 'application/msword2';
+        attach2.IsPrivate = false;
+        insert attach2; 
+         Attachment attach3=new Attachment();
+        attach3.Name='Unit Test Attachment3';
+        attach3.parentId=shave4.Id;
+        attach3.Description = 'Test3';
+        Blob bodyBlob3=Blob.valueOf('Unit Test Attachment Body3');
+        attach3.body=bodyBlob3;
+        attach3.ContentType = 'application/msword3';
+        attach3.IsPrivate = false;
+        insert attach3; 
+         Attachment attach4=new Attachment();
+        attach4.Name='Unit Test Attachment4';
+        attach4.parentId=shave3.Id;
+        attach4.Description = 'Test4';
+        Blob bodyBlob4=Blob.valueOf('Unit Test Attachment Body4');
+        attach4.body=bodyBlob4;
+        attach4.ContentType = 'application/msword4';
+        attach4.IsPrivate = false;
+        insert attach4; 
+        
+        update shave3;
+        update shave4;
+        update shave2;
+        update shave;
+        
+        delete shavein;
+        
+        shave.Order_Value__c  = 0;
+        update shave;
+        
+        shavein2.Rental_Price__c = 200;
+        shavein2.Invoice_Comments__c = 'test';
+        shavein2.Yardage__c = 20;
+        
+        update shavein2;
+        
+        
+        set<id>shaveids = new set<id>();
+        
+        Shavings__c shave6 = new Shavings__c();
+        shave6.Account__c = ac.id;
+        shave6.Comments__c = 'Testing comments';
+        Shave6.Driver__c = 'Bino Ortiz';
+        Shave6.Load_Type__c = '20yd - Bad';
+        shave6.Phone__c = '13265';
+        shave6.Trip_Type__c = 'Delivery';
+        shave6.Shipping_Address__c = '77520';
+        shave6.Visit_Date__c =  Date.newinstance(2021,12,12);
+        insert shave6;
+                
+        ShavingTriggerHandler sth = new ShavingTriggerHandler();
+        sth.DeleteInvoice(shavemap);
+        sth.InvoiceDateUpdate(shavemap);       
+        sth.YardageChangesUpdateRentalPrice(shavemap2);
+        sth.Update_trip_SMS(shavemap);
+       // ShavingTriggerHandler.UpdateGeoCodes(shaveids);
+        Test.stopTest();
+        
+    }
+   
+    
+}
