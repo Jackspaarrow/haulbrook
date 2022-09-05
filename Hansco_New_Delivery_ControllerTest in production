@@ -1,0 +1,160 @@
+/*============================================================================================================
+*Class Name     : TestRobles1_New_Delivery_Controller
+*Description    : Test class for testRobles1_New_Delivery_Controller.
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 7th Nov, 2019
+*Version        : 1.0
+*Change History : Initial Page Controller
+*Methods        : public Dumpster_New_Delivery_Controller
+                  public void SaveDumpster()
+                  public void cancel() 
+*============================================================================================================*/
+@isTest
+
+public class Hansco_New_Delivery_ControllerTest
+{
+    static TestMethod void TestHansco_New_Delivery_Controller()
+    {
+        List<Container_Assets__c> ContainerAssertList = new List<Container_Assets__c>();
+        List<Dumpsters__c> DumpstersList = new List<Dumpsters__c>();
+        List<String> DumpstersName = new List<String>();
+        Set<Id> DumpsterIds = new Set<Id>();
+        
+        Dumpster_Invoice_Email_Helper__c Dinemail = new Dumpster_Invoice_Email_Helper__c();
+        Dinemail.name='Send Landfill Receipt';
+        Dinemail.Is_Active__C=true;
+        Dinemail.Template_Id__c=string.valueOF([select id from EmailTemplate limit 1].id);
+        insert Dinemail;
+        
+        
+        Zip_Code_based_Sales_Tax__c SalesTaxHelper = new Zip_Code_based_Sales_Tax__c(); 
+        SalesTaxHelper.name = '111';
+        SalesTaxHelper.Sales_Tax__c  = 10;
+        insert SalesTaxHelper;
+         
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        account acc=new account();
+        acc.name='testAccount';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        ContainerAssertList.add(coa1);
+        
+        Container_Assets__c coa2=new Container_Assets__c();
+        coa2.Status__c='Active';
+        coa2.In_Use_At__c=null;
+        coa2.Size__c='20 yard';
+        ContainerAssertList.add(coa2);
+        
+        Container_Assets__c coa3=new Container_Assets__c();
+        coa3.Status__c='Active';
+        coa3.In_Use_At__c=null;
+        ContainerAssertList.add(coa3);
+        insert ContainerAssertList;
+        /*
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd';
+        dp1.Status__c='Unscheduled';
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today().addDays(2);
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Delivery_Zip__c=222;
+        dp1.Trip_Order__c='1';
+        DumpstersList.add(dp1);
+        
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd';
+        dp2.Status__c='Request for Pick-Up';
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today();
+        dp2.Container_Asset__c=coa2.id;
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp2.Delivery_Zip__c=222;
+        dp2.Trip_Order__c='2';
+        DumpstersList.add(dp2);
+        
+        Dumpsters__c dp3=new Dumpsters__c();
+        dp3.AAccountccount__c=acc.id;
+        dp3.Rental__c='Dumpster Rental';
+        dp3.Dumpster_Size__c='20yd';
+        dp3.Status__c='Drop Off Complete';
+        dp3.Driver__c = 'Bino Ortiz';
+        dp3.Drop_Off_Visit_Date__c = system.today();
+        dp3.Confirmed_Pick_Up_Date__c = system.today();
+        dp3.Picked_Up_Date_Time__c = system.now();
+        dp3.Container_Asset__c=coa2.id;
+        dp3.Invoiced_Amount__c = 100;
+        dp3.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp3.Delivery_Zip__c=222;
+        dp3.Trip_Order__c='3';
+        DumpstersList.add(dp3);
+        insert DumpstersList;
+        */
+        PageReference pageRef3 = Page.Hansco_New_Delivery;
+        Test.setCurrentPage(pageRef3);
+        Hansco_New_Delivery_Controller lead3 = new Hansco_New_Delivery_Controller();
+        lead3.NewDumpsterRecord.AAccountccount__c = acc.id;
+        lead3.NewDumpsterRecord.Pdf_Parser_Delivery_Address__c = 'Test Address';
+        lead3.DumpsterSizeValue = '40yd';
+        lead3.NewDumpsterRecord.Drop_Off_Visit_Date__c = system.today();
+        lead3.NewDumpsterRecord.Drop_Off_Visit_Time__c = '9am';
+        lead3.DeliveryInstruction = 'Test Comments';
+        lead3.NewDumpsterRecord.Purchase_Order__c = '123456';
+        lead3.SaveDumpster();
+        lead3.cancel();
+        
+        PageReference pageRef2 = Page.Hansco_New_Delivery;
+        Test.setCurrentPage(pageRef2);
+        Hansco_New_Delivery_Controller lead2 = new Hansco_New_Delivery_Controller();
+        lead2.NewDumpsterRecord.AAccountccount__c = acc.id;
+        lead2.NewDumpsterRecord.Pdf_Parser_Delivery_Address__c = 'Test Address';
+        lead2.DumpsterSizeValue = '30yd';
+        lead2.NewDumpsterRecord.Drop_Off_Visit_Date__c = system.today();
+        lead2.NewDumpsterRecord.Drop_Off_Visit_Time__c = '9am';
+        lead2.DeliveryInstruction = 'Test Comments';
+        lead2.NewDumpsterRecord.Purchase_Order__c = '123456';
+        lead2.SaveDumpster();
+        lead2.cancel();
+        
+        PageReference pageRef1 = Page.Hansco_New_Delivery;
+        Test.setCurrentPage(pageRef1);
+        Hansco_New_Delivery_Controller lead1 = new Hansco_New_Delivery_Controller();
+        lead1.NewDumpsterRecord.AAccountccount__c = acc.id;
+        lead1.NewDumpsterRecord.Pdf_Parser_Delivery_Address__c = 'Test Address';
+        lead1.DumpsterSizeValue = '20yd';
+        lead1.NewDumpsterRecord.Drop_Off_Visit_Date__c = system.today();
+        lead1.NewDumpsterRecord.Drop_Off_Visit_Time__c = '9am';
+        lead1.DeliveryInstruction = 'Test Comments';
+        lead1.NewDumpsterRecord.Purchase_Order__c = '1234567';
+        lead1.SaveDumpster();
+        lead1.cancel();
+        
+        PageReference pageRef = Page.Hansco_New_Delivery;
+        Test.setCurrentPage(pageRef);
+        Hansco_New_Delivery_Controller lead = new Hansco_New_Delivery_Controller();
+        lead.NewDumpsterRecord.AAccountccount__c = acc.id;
+        lead.NewDumpsterRecord.Pdf_Parser_Delivery_Address__c = 'Test Address';
+        lead.DumpsterSizeValue = '20yd - Concrete only';
+        lead.NewDumpsterRecord.Drop_Off_Visit_Date__c = system.today();
+        lead.NewDumpsterRecord.Drop_Off_Visit_Time__c = '9am';
+        lead.DeliveryInstruction = 'Test Comments';
+        lead.NewDumpsterRecord.Purchase_Order__c = '1234567';
+        lead.SaveDumpster();
+        lead.cancel();
+    }
+}
