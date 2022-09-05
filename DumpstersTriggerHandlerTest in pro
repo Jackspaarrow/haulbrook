@@ -1,0 +1,1148 @@
+@isTest
+public class DumpstersTriggerHandlerTest{
+
+      @istest static void Dumpstertriggerhandlertest(){ 
+     
+                Dumpster_Invoice_Email_Helper__c Dinemail = new Dumpster_Invoice_Email_Helper__c();
+                Dinemail.name='Send Landfill Receipt';
+                Dinemail.Is_Active__C=true;
+                Dinemail.Template_Id__c=string.valueOF([select id from EmailTemplate limit 1].id);
+                insert Dinemail;
+         
+     
+            Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+            CustomsetContAsset.Enable__c=true;
+            CustomsetContAsset.name='test';
+            insert CustomsetContAsset;
+            
+            Zip_Code_based_Sales_Tax__c SalesTaxHelper = new Zip_Code_based_Sales_Tax__c(); 
+            SalesTaxHelper.name = '111';
+            SalesTaxHelper.Sales_Tax__c  = 10;
+            insert SalesTaxHelper;
+            system.assertequals('111',SalesTaxHelper.name);
+            
+            Dumpster_Expense__c dumpsterexpense = new Dumpster_Expense__c();
+            dumpsterexpense.Name = 'Beck Landfill';
+            dumpsterexpense.Description__c = 'Budget: Actual:';
+            dumpsterexpense.Originator__c = 'Warren Bidmead';
+            dumpsterexpense.Project__c = 'a174D000000LliF';
+            dumpsterexpense.Vendor__c = 'a1E4D000004f5w9';
+            insert dumpsterexpense;
+            
+            Dumpster_Expense__c dumpsterexpense1 = new Dumpster_Expense__c();
+            dumpsterexpense1.Name = 'Blanco Rentals';
+            dumpsterexpense1.Description__c = 'Budget: Actual:';
+            dumpsterexpense1.Originator__c = 'Warren Bidmead';
+            dumpsterexpense1.Project__c = 'a174D000000LliF';
+            dumpsterexpense1.Vendor__c = 'a1E4D000004f5wE';
+            insert dumpsterexpense1;
+            
+                account acc=new account();
+                acc.name='Account';
+                acc.Haulbrooke_Account__c='Yes';
+                insert acc;
+                Pickup_schedule_New_Dumpster__c PSND = new Pickup_schedule_New_Dumpster__c();
+                  PSND.name='Precision Demolition';
+                  PSND.Active__c=true;
+                  PSND.Account_Id__c=acc.id;
+                  insert PSND;
+                  system.debug('PSND------------------------------------------------------'+PSND);   
+                Container_Assets__c coa1=new Container_Assets__c();
+                coa1.Status__c='Active';
+                coa1.In_Use_At__c=null;
+                coa1.Size__c='20 yard';
+                insert coa1;
+                
+                Container_Assets__c coa2=new Container_Assets__c();
+                coa2.Status__c='Active';
+                coa2.In_Use_At__c=null;
+                insert coa2;
+                
+                Container_Assets__c coa3=new Container_Assets__c();
+                coa3.Status__c='Active';
+                coa3.In_Use_At__c=null;
+                insert coa3;
+                Dumpsters__c dp1=new Dumpsters__c();
+                dp1.AAccountccount__c=acc.id;
+                dp1.Rental__c='Demo / Junk Removal';
+                dp1.Status__c='Unscheduled';
+              //  dp1.Driver__c = 'Bino Ortiz';
+                dp1.Delivery_Zip__c=2220;
+              dp1.Drop_Off_Visit_Date__c = system.today();
+              //dp1.Confirmed_Pick_Up_Date__c = system.today().addDays(1);
+              dp1.EmailAlertDate__c = String.valueOf(system.today());
+              dp1.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX 78457 <br/> 21411 U.S. Highway 281 South ,<br/> San Antonio TX 72445';
+              dp1.Container_Asset__c=coa1.id;
+              insert dp1;
+                            Test.startTest();
+     
+                //dp1.Container_Asset__c=coa2.id;
+            //dp1.Container_Asset_Additional__c=coa2.id;
+           // dp1.Container_Asset_Additionals__c=coa3.id;
+            dp1.Status__c='Pick-up Scheduled';
+            //dp1.Delivery_Zip__c=111;
+            dp1.Full_At_The_Office__c='Yes';
+            dp1.Picked_Up_Date_Time__c=system.now();
+            dp1.Dumpster_Weight__c=10;
+            dp1.Full_at_Office_Dumpster_Cloned__c=false;
+            dp1.Confirmed_Pick_Up_Date__c=system.today();
+            update dp1;  
+                    Test.stopTest();
+
+            dp1.Status__c='Cycle Complete';
+            dp1.Payment__c='Cash';
+            //dp1.Confirmed_Pick_Up_Date__c=system.today();
+            dp1.Final_Invoice_Number__c  = Decimal.ValueOf('123');
+            //dp1.Picked_Up_Date_Time__c=system.now();
+            dp1.Invoiced_Amount__c=1000;
+            dp1.Initial_Invoice_Number__c  = Decimal.ValueOf('123');
+            dp1.Final_Payment_Received__c='Cash';
+            update dp1;
+        Dumpsterstriggerhandler.SendingMail(String.valueOf(System.Today()), '20 Records Alert : for the testing Record', 20);
+        DumpstersTriggerHandler.SendingMail('2019/03/25','20 Records Alert : for the testing Record',20);  
+                  delete dp1;  
+     }
+        
+      static testMethod void TestDumpstertriggerhandler(){ 
+        Id RecordTypeIdDumpster = Schema.SObjectType.Dumpster_invoice__c.getRecordTypeInfosByName().get('Final Invoice').getRecordTypeId();
+
+      
+        Dumpster_Invoice_Email_Helper__c Dinemail = new Dumpster_Invoice_Email_Helper__c();
+        Dinemail.name='Send Landfill Receipt';
+        Dinemail.Is_Active__C=true;
+        Dinemail.Template_Id__c=string.valueOF([select id from EmailTemplate limit 1].id);
+        insert Dinemail;
+ 
+     
+        Zip_Code_based_Sales_Tax__c SalesTaxHelper = new Zip_Code_based_Sales_Tax__c(); 
+            SalesTaxHelper.name = '111';
+            SalesTaxHelper.Sales_Tax__c  = 10;
+            insert SalesTaxHelper;
+         
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        account acc=new account();
+        acc.name='Haulbrooke';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        
+        Container_Assets__c coa2=new Container_Assets__c();
+        coa2.Status__c='Active';
+        coa2.In_Use_At__c=null;
+        insert coa2;
+        
+        Container_Assets__c coa3=new Container_Assets__c();
+        coa3.Status__c='Active';
+        coa3.In_Use_At__c=null;
+        insert coa3;
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd';
+        dp1.Status__c='Pick-Up Scheduled';
+        dp1.Driver__c = 'Bino Ortiz';
+          dp1.Dumpster_Weight__c =2.55;
+          dp1.Drop_Off_Visit_Date__c = system.today();
+          dp1.Picked_Up_Date_Time__c = system.today();
+         dp1.Confirmed_Pick_Up_Date__c = Date.newInstance(2021, 03, 25); 
+        dp1.Picked_Up_Date_Time__c = DateTime.newInstance(2021, 03, 25, 00, 00, 00);   
+        dp1.Container_Asset__c=coa1.id;
+        //dp1.EmailAlertDate__c = String.valueOf(system.today());
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        //dp1.Container_Asset_Additional__c=coa2.id;
+        //dp1.Container_Asset_Additionals__c=coa3.id;
+        dp1.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , 78264';
+        dp1.Delivery_Zip__c=222; 
+        
+        insert dp1;
+        system.assertequals(acc.id,dp1.AAccountccount__c);
+        
+        Dumpster_invoice__c DumpsterInv =  new Dumpster_invoice__c();
+        DumpsterInv.Dumpsters__c = dp1.id; 
+        DumpsterInv.Dumpster_sync__c = true;
+        DumpsterInv.Description__c = 'Haul Only';
+        DumpsterInv.recordtypeid=RecordTypeIdDumpster;
+        insert DumpsterInv;
+                Test.startTest();
+
+        dp1.Status__c='Pick-up Scheduled';
+        dp1.Delivery_Zip__c=111;
+        dp1.Picked_Up_Date_Time__c=system.now()+1;
+        dp1.Dumpster_Weight__c=10;
+        dp1.Pick_Up_Driver__c = 'warren';
+        dp1.Confirmed_Pick_Up_Date__c=system.today()+1; 
+        dp1.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264';           
+        update dp1;  
+        
+        dp1.Status__c='Cycle Complete';
+        dp1.Payment__c='Cash';
+        dp1.Final_Invoice_Number__c  = Decimal.ValueOf('123');
+        dp1.Initial_Invoice_Number__c  = Decimal.ValueOf('123');
+        dp1.Picked_Up_Date_Time__c=system.now()+1;
+        dp1.Invoiced_Amount__c=1000;
+        dp1.Other_Charges__c = 10;
+        dp1.Final_Payment_Received__c='Cash';
+        dp1.Delivery_Zip__c=111;    
+        //update dp1;
+           
+       // dp1.EmailAlertDate__c = String.valueOf(system.today());
+       // update dp1;
+        
+                 
+        Container_Assets__c coa4=new Container_Assets__c();
+        coa4.Status__c='Active';
+        //coa4.In_Use_At__c=dp1.id;
+        coa4.Size__c='20 yard';
+        insert coa4;    
+        
+        dp1.Container_Asset__c=coa4.id;
+        dp1.Recurring__c='Yes';
+        dp1.Status__c ='Request for Pick-Up';
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Confirmed_Pick_Up_Date__c = Date.newInstance(2019, 03, 25); 
+        dp1.Picked_Up_Date_Time__c = DateTime.newInstance(2019, 03, 25, 00, 00, 00);   
+        //dp1.Container_Asset_Additional__c=coa4.id;
+      
+        //update dp1;        
+        DumpstersTriggerHandler.SendingMail('2019/04/15','30 Records Alert : for the testing Record',40);
+        Test.stopTest();
+      }
+      
+      static testMethod void TestDumpstertriggerhandler1(){ 
+        Id RecordTypeIdDumpster = Schema.SObjectType.Dumpster_invoice__c.getRecordTypeInfosByName().get('Final Invoice').getRecordTypeId();
+        
+        List<Dumpsters__c> DumpsterList = new List<Dumpsters__c>();
+      
+        Dumpster_Invoice_Email_Helper__c Dinemail = new Dumpster_Invoice_Email_Helper__c();
+        Dinemail.name='Send Landfill Receipt';
+        Dinemail.Is_Active__C=true;
+        Dinemail.Template_Id__c=string.valueOF([select id from EmailTemplate limit 1].id);
+        insert Dinemail;
+ 
+     
+        Zip_Code_based_Sales_Tax__c SalesTaxHelper = new Zip_Code_based_Sales_Tax__c(); 
+            SalesTaxHelper.name = '111';
+            SalesTaxHelper.Sales_Tax__c  = 10;
+            insert SalesTaxHelper;
+         
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        account acc=new account();
+        acc.name='testAccount';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        
+        Container_Assets__c coa2=new Container_Assets__c();
+        coa2.Status__c='Active';
+        coa2.In_Use_At__c=null;
+       // insert coa2;
+        
+        Container_Assets__c coa3=new Container_Assets__c();
+        coa3.Status__c='Active';
+        coa3.In_Use_At__c=null;
+        //insert coa3;
+        
+        Container_Assets__c coa4=new Container_Assets__c();
+        coa4.Status__c='Active';
+        //coa4.In_Use_At__c=dp1.id;
+        coa4.Size__c='20 yard';
+        insert coa4; 
+        system.assertequals('20 yard',coa4.Size__c); 
+        Test.startTest();
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd';
+        dp1.Status__c='Unscheduled';
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today().addDays(2);
+        dp1.Container_Asset__c=coa1.id;
+        //dp1.EmailAlertDate__c = String.valueOf(system.today());
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        //dp1.Container_Asset_Additional__c=coa2.id;
+        //dp1.Container_Asset_Additionals__c=coa3.id;
+        dp1.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264';
+        dp1.Comments__c ='Pickup Instructions: Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Is_Cloning__c = true;
+        DumpsterList.add(dp1);
+        
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd';
+        dp2.Status__c='Unscheduled';
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Comments__c ='Pick Up Instructions: Drop off Instructions: ';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today().addDays(2);
+        dp2.Container_Asset__c=coa1.id;
+        //dp2.EmailAlertDate__c = String.valueOf(system.today());
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        //dp1.Container_Asset_Additional__c=coa2.id;
+        //dp1.Container_Asset_Additionals__c=coa3.id;
+        dp2.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264';
+        dp2.Delivery_Zip__c=222; 
+        
+       // DumpsterList.add(dp2);
+        
+        insert DumpsterList;
+        
+        dp1.Status__c='Cycle Complete';
+        dp1.Rental__c='Demo / Junk Removal';
+        dp1.Payment__c='Cash';
+        dp1.Final_Invoice_Number__c  = Decimal.ValueOf('123');
+        dp1.Initial_Invoice_Number__c  = Decimal.ValueOf('123');
+        dp1.Picked_Up_Date_Time__c=system.now()+2;
+        dp1.Invoiced_Amount__c=1000;
+        dp1.Other_Charges__c = 10;
+        dp1.Final_Payment_Received__c='Cash';
+        dp1.Delivery_Zip__c=111;  
+        
+        update DumpsterList;  
+        
+        dp1.Recurring__c='Yes';
+        dp1.Status__c ='Request for Pick-Up';
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Confirmed_Pick_Up_Date__c = system.today(); 
+        dp1.Picked_Up_Date_Time__c = system.now();   
+        dp1.Container_Asset_Additional__c=coa4.id;
+        dp1.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264'; 
+        
+        update DumpsterList;
+        Test.stopTest();
+        //dp2.Recurring__c='Yes';
+        //dp2.Status__c ='Request for Pick-Up';
+        //dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        //dp2.Confirmed_Pick_Up_Date__c = system.today(); 
+        //dp2.Picked_Up_Date_Time__c = system.now(); 
+        //dp2.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264'; 
+        //dp1.Is_Cloning__c = true;
+        
+        //update DumpsterList;
+        
+        }
+        /*
+        static testMethod void TestDumpstertriggerhandlerpickuprequest(){ 
+        Id RecordTypeIdDumpster = Schema.SObjectType.Dumpster_invoice__c.getRecordTypeInfosByName().get('Final Invoice').getRecordTypeId();
+        
+        List<Dumpsters__c> DumpsterList = new List<Dumpsters__c>();
+      
+        Dumpster_Invoice_Email_Helper__c Dinemail = new Dumpster_Invoice_Email_Helper__c();
+        Dinemail.name='Send Landfill Receipt';
+        Dinemail.Is_Active__C=true;
+        Dinemail.Template_Id__c=string.valueOF([select id from EmailTemplate limit 1].id);
+        insert Dinemail;
+ 
+     
+        Zip_Code_based_Sales_Tax__c SalesTaxHelper = new Zip_Code_based_Sales_Tax__c(); 
+            SalesTaxHelper.name = '111';
+            SalesTaxHelper.Sales_Tax__c  = 10;
+            insert SalesTaxHelper;
+            system.assertequals('111',SalesTaxHelper.name );
+         
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        account acc=new account();
+        acc.name='testAccount';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        
+        Container_Assets__c coa2=new Container_Assets__c();
+        coa2.Status__c='Active';
+        coa2.In_Use_At__c=null;
+        insert coa2;
+        
+        Container_Assets__c coa3=new Container_Assets__c();
+        coa3.Status__c='Active';
+        coa3.In_Use_At__c=null;
+        insert coa3;
+        
+        Container_Assets__c coa4=new Container_Assets__c();
+        coa4.Status__c='Active';
+        //coa4.In_Use_At__c=dp1.id;
+        coa4.Size__c='20 yard';
+        insert coa4;  
+        Test.startTest();
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd';
+        dp1.Status__c='Pick-Up Scheduled';
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264';
+        dp1.Comments__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        DumpsterList.add(dp1);
+        
+        Dumpsters__c dp2 = new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd';
+        dp2.Status__c='Pick-Up Scheduled';
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today();
+        dp2.Container_Asset__c=coa1.id;
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp2.Pdf_Parser_Delivery_Address__c='21411 U.S. Highway 281 South , San Antonio TX , 78264';
+        dp2.Comments__c ='Pickup Instructions: More than one dumpster onsite, pickup the fullest dumpster, it should be HB165, let Warren know if it is not, so he can change the record. Drop off Instructions: ';
+        dp2.Delivery_Zip__c=222; 
+        dp2.Final_invoice_Number__c = 0;
+        dp2.Picked_Up_Date_Time__c =system.now();
+        dp2.Dumpster_Weight__c =25;
+        dp2.AAccountccount__c=acc.id;
+        dp2.Is_Cloning__c = true;
+        DumpsterList.add(dp2);
+        
+        insert DumpsterList;
+        
+        dp1.Status__c = 'Cycle Complete';
+        dp1.Initial_Invoice_Number__c = 123;
+        dp1.Invoiced_Amount__c = 10;
+        dp1.Final_invoice_Number__c = 0;
+        
+        update dp1;
+        Test.stopTest();
+        
+        } */
+  /*--------------------------------------------------------------------------------------------*/
+    static testMethod void create_interim_invoice2()
+    {
+       Id RecordTypeIdDumpster = Schema.SObjectType.Dumpster_invoice__c.getRecordTypeInfosByName().get('Final Invoice').getRecordTypeId();
+             
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        system.assertequals('20 yard',coa1.Size__c);
+        Test.startTest();
+      Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+        dp1.Consolidate_Invoice__c = 'Yes';
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        insert dp1;
+        
+         Dumpster_invoice__c DumpsterInv =  new Dumpster_invoice__c();
+        DumpsterInv.Dumpsters__c = dp1.id; 
+        DumpsterInv.Dumpster_sync__c = true;
+        DumpsterInv.recordtypeid=RecordTypeIdDumpster;
+        insert DumpsterInv;       
+        dp1.Status__c='Pick-Up Scheduled';       
+        dp1.Invoicing_Comments_Final__c ='interim';
+        update dp1;
+        
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp1.id, dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.create_interim_invoice(Dumpsters);
+        Test.stopTest();
+    }
+ static testMethod void create_interim_invoice()
+    {
+       Id RecordTypeIdDumpster = Schema.SObjectType.Dumpster_invoice__c.getRecordTypeInfosByName().get('Final Invoice').getRecordTypeId();
+             
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        Test.startTest();
+      Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+       
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        insert dp1;
+        system.assertequals(acc.id,dp1.AAccountccount__c);
+        
+         Dumpster_invoice__c DumpsterInv =  new Dumpster_invoice__c();
+        DumpsterInv.Dumpsters__c = dp1.id; 
+        DumpsterInv.Dumpster_sync__c = true;
+        DumpsterInv.recordtypeid=RecordTypeIdDumpster;
+        insert DumpsterInv;       
+        dp1.Status__c='Pick-Up Scheduled';       
+        dp1.Invoicing_Comments_Final__c ='interim';
+        update dp1;
+        
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp1.id, dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.create_interim_invoice(Dumpsters);
+        Test.stopTest();
+    }
+/*-------------------------------------------------------------------------------------------------*/
+   static testMethod void Weekly_Invoice()
+   {
+     
+        account acc=new account();
+        acc.name='HAJ-0741 c/o WDS';
+        acc.Haulbrooke_Account__c='Yes';
+        acc.Dumpster_Rental_Weekly_Invoice__c='Yes';
+        acc.Consolidated_Invoice__c='Yes';
+        insert acc;              
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        
+        
+        
+        List<Dumpsters__c> DumpsterList = new List<Dumpsters__c>();
+        
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today()+15;
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';    
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now()+15;
+        dp1.Purchase_Order__c='56789';
+        dp1.Dumpster_Weight__c =25;
+        DumpsterList.add(dp1);
+        
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd'; 
+        dp2.Status__c='Unscheduled';       
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Container_Asset__c=coa1.id;
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp2.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';    
+        dp2.Delivery_Zip__c=222; 
+        dp2.Picked_Up_Date_Time__c =system.now();
+        dp2.Purchase_Order__c='567890';
+        dp2.Dumpster_Weight__c =25;
+        DumpsterList.add(dp2);
+        insert DumpsterList;
+       
+        Test.startTest();
+        dp1.Status__c='Pick-Up Scheduled';
+        
+        dp2.Prohibited_Items__c = 100;
+        dp2.Wait_Charge__c = 50;
+        dp2.Other_Charges__c = 150;
+        
+        update DumpsterList;
+        
+        
+        dp2.Status__c='Pick-Up Scheduled';
+        update dp2;
+        system.assertequals('Pick-Up Scheduled',dp2.Status__c);
+        
+        dp2.Prohibited_Items__c = 150;
+        dp2.Wait_Charge__c = 30;
+        dp2.Other_Charges__c = 160;
+        dp2.Dumpster_Rental_price__c = 160;
+        dp2.Tonnage_Quantity__c = 160;
+        dp2.Additional_Tonnage_Quantity__c = 160;
+        update dp2;
+       
+        Map<Id, Dumpsters__c> DumpsterInsert = new Map<Id, Dumpsters__c>();
+        DumpsterInsert.put(dp2.Id, dp2);
+     
+        DumpstersTriggerHandler DI = new DumpstersTriggerHandler();
+        DI.create_new_dumpster(DumpsterInsert);
+        Test.stopTest();
+     
+   }
+   
+   /*-------------------------------------------------------------------------------------------------*/
+/*
+   static testMethod void PickupNew_Invoice()
+   {
+     
+        account acc=new account();
+        acc.name='HAJ-0741 c/o WDS';
+        acc.Haulbrooke_Account__c='Yes';
+        acc.Consolidated_Invoice__c='Yes';
+        insert acc;              
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        
+        
+        
+        List<Dumpsters__c> DumpsterList = new List<Dumpsters__c>();
+        
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today()+15;
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';    
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now()+15;
+        dp1.Purchase_Order__c='56789';
+        dp1.Dumpster_Weight__c =25;
+        DumpsterList.add(dp1);
+        
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd'; 
+        dp2.Status__c='Unscheduled';       
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today();
+        dp2.Container_Asset__c=coa1.id;
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp2.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio,  78452';    
+        dp2.Delivery_Zip__c=222; 
+        dp2.Picked_Up_Date_Time__c =system.now();
+        dp2.Purchase_Order__c='567890';
+        dp2.Dumpster_Weight__c =25;
+        DumpsterList.add(dp2);
+        insert DumpsterList;
+        
+        Test.startTest();
+        dp1.Status__c='Pick-Up Scheduled';
+        
+        dp2.Prohibited_Items__c = 100;
+        dp2.Wait_Charge__c = 50;
+        dp2.Other_Charges__c = 150;
+        dp2.Consolidate_Invoice__c = '';
+        dp2.Status__c='Pick-Up Scheduled';
+        
+        update DumpsterList;
+        system.assertequals(50,dp2.Wait_Charge__c);
+        
+        dp1.Status__c='Request for Pick-Up';
+        dp2.Status__c='Request for Pick-Up';
+        update DumpsterList;
+        TrggrUtility.RunOnceD = false;
+        dp1.Status__c='Pick-Up Scheduled';
+        dp2.Status__c='Pick-Up Scheduled';
+        update DumpsterList;
+        /*
+        Map<Id, Dumpsters__c> DumpsterInsert = new Map<Id, Dumpsters__c>();
+        DumpsterInsert.put(dp2.Id, dp2);
+        DumpstersTriggerHandler DI = new DumpstersTriggerHandler();
+        DI.create_new_dumpster(DumpsterInsert);//
+        Test.stopTest();
+     
+   }
+    
+*/
+   
+   static testMethod void equipmentassetcheck()
+   {
+       account acc=new account();
+        acc.name='HAJ-0741 c/o WDS';
+        acc.Haulbrooke_Account__c='Yes';
+        acc.Consolidated_Invoice__c='Yes';
+        insert acc;              
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        coa1.Type__c = 'Open Top - Short';
+        insert coa1;
+        
+        Container_Assets__c coa2 = new Container_Assets__c();
+        coa2.Status__c='Active';
+        coa2.In_Use_At__c=null;
+        coa2.Size__c='20 yard';
+        coa2.Type__c = 'Open Top - 000 & 014';
+        insert coa2;       
+        
+        
+        List<Dumpsters__c> DumpsterList = new List<Dumpsters__c>();
+        
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today()+15;
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';    
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now()+15;
+        dp1.Purchase_Order__c='56789';
+        dp1.Dumpster_Weight__c =25;
+        DumpsterList.add(dp1);
+        
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd'; 
+        dp2.Status__c='Unscheduled';       
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today();
+        dp2.Container_Asset__c=coa2.id;
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp2.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio,  78452';    
+        dp2.Delivery_Zip__c=222; 
+        dp2.Picked_Up_Date_Time__c =system.now();
+        dp2.Purchase_Order__c='567890';
+        dp2.Dumpster_Weight__c =25;
+        DumpsterList.add(dp2);
+        insert DumpsterList;
+        
+        Equipment_Assets__c Eqiupments = new Equipment_Assets__c();
+        Eqiupments.Name = 'Test';
+        Eqiupments.Second_Shirt_Driver__c = 'Bino Ortiz';
+        Eqiupments.Dumpster_Check__c = 'Short';
+        Eqiupments.Haulbrooke_Regional_Base__c = 'Houston';
+        insert Eqiupments;
+        system.assertequals('Short',Eqiupments.Dumpster_Check__c);
+        
+        Equipment_Assets__c Eqiupments1 = new Equipment_Assets__c();
+        Eqiupments1.Name = 'Test 2';
+        Eqiupments1.Second_Shirt_Driver__c = 'Bino Ortiz';
+        Eqiupments1.Dumpster_Check__c = '000 - 014';
+        Eqiupments1.Haulbrooke_Regional_Base__c = 'Houston';
+        insert Eqiupments1;
+        
+        Equipment_Asset_Validation__c valida = new Equipment_Asset_Validation__c();
+        valida.Name = 'Test';
+        valida.Active__c = true;
+        valida.Equipment_Id__c = Eqiupments.Id;
+        insert valida;
+        
+        Equipment_Asset_Validation__c valida1 = new Equipment_Asset_Validation__c();
+        valida1.Name = 'Test';
+        valida1.Active__c = true;
+        valida1.Equipment_Id__c = Eqiupments1.Id;
+        insert valida1;
+        
+        dp1.Pick_Up_Driver__c = 'Warren';
+        update dp1;
+        
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        update dp2;
+   }
+    
+    static testMethod void Createinteriminvoicecheck()
+   {
+
+        Id RecordTypeIdDumpster = Schema.SObjectType.Dumpster_invoice__c.getRecordTypeInfosByName().get('Final Invoice').getRecordTypeId();
+             
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        system.assertequals('test',CustomsetContAsset.name);
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        Test.startTest();
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+       dp1.X10_Days_Rental_Up_Date__c = system.today()+10;
+       dp1.Interim_Invoices__c = 'Create';
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        insert dp1;
+        
+         Dumpster_invoice__c DumpsterInv =  new Dumpster_invoice__c();
+        DumpsterInv.Dumpsters__c = dp1.id; 
+        DumpsterInv.Dumpster_sync__c = true;
+        DumpsterInv.recordtypeid=RecordTypeIdDumpster;
+       DumpsterInv.Invoicing_Comments__c = 'Invoice only: '+system.today()+' ~Interim invoice raised for rental days to date';
+        insert DumpsterInv;       
+       
+       dp1.X10_Days_Rental_Up_Date__c = system.now();
+       dp1.Interim_Invoice__c = true;
+       dp1.Pickup_Update_Request_Comments__c = system.today() +'~interim inv~WB';
+       
+        update dp1;
+        
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp1.id, dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.create_interim_invoice(Dumpsters);
+       
+        Test.stopTest();
+   }
+    
+    static testmethod void createnewdumpsterafterpickupcheck()
+    {
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        Test.startTest();
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+       dp1.X10_Days_Rental_Up_Date__c = system.today()+10;
+       dp1.Interim_Invoices__c = 'Create';
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        insert dp1;
+        system.assertEquals(coa1.id,dp1.Container_Asset__c);
+        
+        /*
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd'; 
+        dp2.Status__c='Unscheduled';       
+        dp2.Driver__c = 'Bino Ortiz';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today();
+        dp2.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp2.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp2.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp2.Delivery_Zip__c=222; 
+        dp2.Picked_Up_Date_Time__c =system.now();
+       dp2.X10_Days_Rental_Up_Date__c = system.today()+10;
+       dp2.Interim_Invoices__c = 'Create';
+        dp2.Dumpster_Weight__c =25;
+        dp2.Purchase_Order__c=dp1.Purchase_Order__c+1;
+        insert dp2;       
+        
+       */
+        
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Map<id, Dumpsters__c> oldDumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp1.id, dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.createnewdumpsterafterpickup(Dumpsters);
+        
+        DTH.relocationCommentRevert(Dumpsters,oldDumpsters);
+       
+        Test.stopTest();
+    }
+    
+    static testmethod void updateAverageCycleDayscheck()
+    {
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        
+        Test.startTest();
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+       dp1.X10_Days_Rental_Up_Date__c = system.today()+10;
+       dp1.Interim_Invoices__c = 'Create';
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        insert dp1;
+        system.assertEquals(coa1.id,dp1.Container_Asset__c);
+        
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        update dp1;
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp1.id, dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.updateAverageCycleDays(Dumpsters);
+       // DTH.createnewdumpsterafterdropoff(Dumpsters);
+         DTH.InvoicecommentUpdate(Dumpsters);
+         Test.stopTest();
+    }
+    
+    /*
+    static testmethod void createnewdumpsterafterdropoffcheck()
+    {
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        Test.startTest();
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+       dp1.X10_Days_Rental_Up_Date__c = system.today()+10;
+       dp1.Interim_Invoices__c = 'Create';
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='56789';
+        insert dp1;
+        system.assertEquals(coa1.id,dp1.Container_Asset__c);
+            
+         dp1.Status__c = 'Drop Off Complete';
+        update dp1;
+        
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp1.id, dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.createnewdumpsterafterdropoff(Dumpsters);
+        DTH.InvoicecommentUpdate(Dumpsters);
+       
+        Test.stopTest();
+    }
+    */
+    /*
+    static testmethod void update_trip_SMScheck()
+    {
+        account acc=new account();
+        acc.name='Test Account';
+        acc.Haulbrooke_Account__c='Yes';
+        insert acc;
+        
+        Container_Asset__c CustomsetContAsset=new Container_Asset__c();
+        CustomsetContAsset.Enable__c=true;
+        CustomsetContAsset.name='test';
+        insert CustomsetContAsset;
+        
+        Container_Assets__c coa1=new Container_Assets__c();
+        coa1.Status__c='Active';
+        coa1.In_Use_At__c=null;
+        coa1.Size__c='20 yard';
+        insert coa1;
+        Test.startTest();
+        
+        Dumpsters__c dp1=new Dumpsters__c();
+        dp1.AAccountccount__c=acc.id;
+        dp1.Rental__c='Dumpster Rental';
+        dp1.Dumpster_Size__c='20yd'; 
+        dp1.Status__c='Unscheduled';       
+        dp1.Driver__c = 'Bino Ortiz';
+        dp1.Trip_Order__c = '5';
+        dp1.Drop_Off_Visit_Date__c = system.today();
+        dp1.Confirmed_Pick_Up_Date__c = system.today();
+        dp1.Container_Asset__c=coa1.id;
+        dp1.Pick_Up_Driver__c = 'Bino Ortiz';
+        dp1.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp1.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp1.Delivery_Zip__c=222; 
+        dp1.Picked_Up_Date_Time__c =system.now();
+        dp1.X10_Days_Rental_Up_Date__c = system.today()+10;
+        dp1.Dumpster_Weight__c =25;
+        dp1.Purchase_Order__c='8975';
+        dp1.Phone_Number_2__c = '+919626888321';
+        insert dp1;
+        system.assertequals(coa1.id,dp1.Container_Asset__c);
+        
+        Dumpsters__c dp2=new Dumpsters__c();
+        dp2.AAccountccount__c=acc.id;
+        dp2.Rental__c='Dumpster Rental';
+        dp2.Dumpster_Size__c='20yd'; 
+        dp2.Status__c='Unscheduled';       
+        dp2.Driver__c = 'Warren';
+        dp2.Trip_Order__c = '6';
+        dp2.Drop_Off_Visit_Date__c = system.today();
+        dp2.Confirmed_Pick_Up_Date__c = system.today();
+        dp2.Pick_Up_Driver__c = 'Warren';
+        dp2.Pdf_Parser_Delivery_Address__c='5919 West Campus Drive, Suite 101, San Antonio, TX 78247';
+        dp2.Invoicing_Comments_Final__c ='Pickup Instructions: pickup HBD250, Drop off Instructions: ';
+        dp2.Delivery_Zip__c=222; 
+        dp2.Picked_Up_Date_Time__c =system.now();
+        dp2.X10_Days_Rental_Up_Date__c = system.today()+10;
+        dp2.Dumpster_Weight__c =25;
+        dp2.Purchase_Order__c='89751';
+        dp2.Phone_Number_2__c = '+919626888321';
+        insert dp2;
+        system.assertequals(acc.id,dp2.AAccountccount__c);
+       
+        Map<id, Dumpsters__c> Dumpsters = new Map<id, Dumpsters__c>();
+        Map<id, Dumpsters__c> oldDumpsters = new Map<id, Dumpsters__c>();
+        Dumpsters.put(dp2.id, dp2);
+        oldDumpsters.put(dp1.id,dp1);
+        DumpstersTriggerHandler DTH = new DumpstersTriggerHandler();
+        DTH.update_trip_SMS(Dumpsters,oldDumpsters);
+       
+        Test.stopTest();
+        
+    }
+ */
+}
