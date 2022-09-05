@@ -1,0 +1,152 @@
+/*============================================================================================================
+*Class Name     : Hansco_New_Delivery_Controller
+*Description    : Used to track dumpster based on the status.
+*Company        : Merfantz Technologies Pvt Ltd
+*Date           : 7th Nov, 2019
+*Version        : 1.0
+*Change History : Initial Page Controller
+*Methods        : public Dumpster_New_Delivery_Controller
+                  public void SaveDumpster()
+                  public void cancel() 
+*============================================================================================================*/
+
+public class Hansco_New_Delivery_Controller 
+{
+    public Dumpsters__c NewDumpsterRecord {get; set;}
+    public ID recId = System.Label.Hansco;
+
+    public Boolean NotforPickup {get; set;}
+    public String DeliveryInstruction {get; set;}
+    public List<SelectOption> PickUpTime {get; set;}
+    public List<SelectOption> DumpsterSize {get; set;}
+    public String DumpsterSizeValue {get; set;}
+    
+    public Hansco_New_Delivery_Controller () 
+    {
+
+        NewDumpsterRecord = new Dumpsters__c();
+        NewDumpsterRecord.AAccountccount__c = recId;
+
+        PickUpTime = new List < SelectOption > ();
+        DumpsterSize = new List < SelectOption >();
+        
+        DumpsterSize.add(new SelectOption('', '--None--'));
+        DumpsterSize.add(new SelectOption('20yd', '20 Yard'));
+        DumpsterSize.add(new SelectOption('30yd', '30 Yard'));
+        DumpsterSize.add(new SelectOption('40yd', '40 Yard'));
+        DumpsterSize.add(new SelectOption('20yd - Concrete only', '20 Yard - Concrete only'));
+        
+        PickUpTime.add(new SelectOption('', '--None--'));
+        PickUpTime.add(new SelectOption('9am', 'AM'));
+        PickUpTime.add(new SelectOption('2pm', 'PM'));
+    }
+    
+    /*====================================================
+
+    *Method Name     : SaveDumpster
+    *Description         : Used to update the Dumpster for Request for pickup.
+    *Arguments         : No Argument’s Definition
+    ====================================================*/
+    
+    public void SaveDumpster() 
+    {
+        NotforPickup = false;
+        
+        Boolean checkrequired = false;
+        
+        if(DumpsterSizeValue == '--None--')
+        {
+            ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,'Dumpster size is required.'));
+            checkrequired = true;
+        }
+        if(!checkrequired)
+        {    
+            NewDumpsterRecord.AAccountccount__c = recId;
+            NewDumpsterRecord.Status__c = 'Unscheduled';
+            NewDumpsterRecord.Rental__c = 'Dumpster Rental';
+            if(DumpsterSizeValue != '20yd - Concrete only')
+            {
+                NewDumpsterRecord.Dumpster_Size__c = DumpsterSizeValue;
+            }
+            else if(DumpsterSizeValue == '20yd - Concrete only')
+            {
+                NewDumpsterRecord.Dumpster_Size__c = '20yd';
+                NewDumpsterRecord.Concrete_Only__c = 'Yes';
+            }
+            
+            NewDumpsterRecord.Email_Success_helper__c = NewDumpsterRecord.AAccountccount__c;
+            
+            if(NewDumpsterRecord.Dumpster_Size__c == '40yd')
+            {
+               NewDumpsterRecord.Driver__c = Label.X40ydDriver;  
+            }
+            else if(NewDumpsterRecord.Dumpster_Size__c == '30yd')
+            {
+               NewDumpsterRecord.Driver__c = Label.X30ydDriver;
+            }
+            else if(NewDumpsterRecord.Dumpster_Size__c == '20yd')
+            {
+               NewDumpsterRecord.Driver__c = Label.X20ydDriver;
+            }
+       
+            if(NewDumpsterRecord.Dumpster_Size__c == '40yd')
+            {
+               NewDumpsterRecord.Pick_Up_Driver__c = Label.X40ydDriver;
+            }
+            else if(NewDumpsterRecord.Dumpster_Size__c == '30yd')
+            {
+               NewDumpsterRecord.Pick_Up_Driver__c = Label.X30ydDriver;
+            }
+            else if(NewDumpsterRecord.Dumpster_Size__c == '20yd')
+            {
+               NewDumpsterRecord.Pick_Up_Driver__c = Label.X20ydDriver;
+            }
+            String PickUpComments = 'Pick Up Instructions:\n\nDrop Off Instructions:\n\ncall to provide eta and to confirm drop location.';
+            if(DeliveryInstruction != null || DeliveryInstruction != '')
+            {
+                if(PickUpComments.contains('Drop Off Instructions:'))
+                {
+                    NewDumpsterRecord.Comments__c = PickUpComments.replace('Drop Off Instructions:','Drop Off Instructions:\n\n'+DeliveryInstruction+'\n');
+                }
+                else
+                {
+                    NewDumpsterRecord.Comments__c = 'Drop Off Instructions:\n\n'+DeliveryInstruction+'\n\n'+PickUpComments;
+                }
+            }
+            
+            try
+            {
+                insert NewDumpsterRecord;
+                NotforPickup = true;
+                DeliveryInstruction = '';
+                DumpsterSizeValue = '';
+                NewDumpsterRecord = new Dumpsters__c(AAccountccount__c = recId);
+            }
+            catch(Exception e)
+            {
+                System.debug('Exception Raised due to :'+ e);
+                if(String.valueOf(e.getmessage()).contains('Duplicate'))
+                {
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,'Duplicate Phone found.'));
+                }
+                else
+                {
+                    ApexPages.addmessage(new ApexPages.message(ApexPages.severity.ERROR,e.getmessage()));
+                }
+            }
+        }
+    }
+    
+    /*====================================================
+
+    *Method Name     : cancel
+    *Description         : Used to Reset the page.
+    *Arguments         : No Argument’s Definition
+    ====================================================*/
+    public void cancel() 
+    {
+        DeliveryInstruction = '';
+        DumpsterSizeValue = '';
+        NewDumpsterRecord = new Dumpsters__c(AAccountccount__c = recId);
+    }
+}
